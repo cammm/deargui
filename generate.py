@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import collections
 from clang import cindex
 
@@ -19,7 +20,7 @@ void template_ImVector(py::module &module, const char* name)
         })
         .def_property_readonly("data", [](const ImVector<T>& self)
         {
-            return int((void*)self.Data);
+            return long((void*)self.Data);
         })
         .def("__len__", [](const ImVector<T>& self)
         {
@@ -153,6 +154,10 @@ EXCLUDES = set(
     "ImGui::PlotHistogram",
     'ImFont::CalcTextSizeA',
     "ImGuiTextFilter::Filters",
+    "ImGuiIO::GetClipboardTextFn",
+    "ImGuiIO::SetClipboardTextFn",
+    "ImGuiIO::ImeSetInputScreenPosFn",
+    "ImDrawCmd::UserCallback",
 
     # Wrapped
     'ImDrawData::CmdLists',
@@ -402,6 +407,8 @@ def out(line):
     out.file.write('\n')
 
 if __name__ == '__main__':
+    if sys.platform == 'darwin':
+        cindex.Config.set_library_path('/usr/local/opt/llvm@6/lib')
     base = os.path.dirname(os.path.realpath(__file__))
     path = os.path.join(base, "imgui/imgui.h")
     tu = cindex.Index.create().parse(path, args=['-std=c++17', '-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1'])

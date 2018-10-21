@@ -14,7 +14,7 @@ void template_ImVector(py::module &module, const char* name)
         })
         .def_property_readonly("data", [](const ImVector<T>& self)
         {
-            return int((void*)self.Data);
+            return long((void*)self.Data);
         })
         .def("__len__", [](const ImVector<T>& self)
         {
@@ -1552,10 +1552,7 @@ PYBIND11_MODULE(deargui, deargui)
         .def_readwrite("config_mac_osx_behaviors", &ImGuiIO::ConfigMacOSXBehaviors)
         .def_readwrite("config_input_text_cursor_blink", &ImGuiIO::ConfigInputTextCursorBlink)
         .def_readwrite("config_resize_windows_from_edges", &ImGuiIO::ConfigResizeWindowsFromEdges)
-        .def_readwrite("get_clipboard_text_fn", &ImGuiIO::GetClipboardTextFn)
-        .def_readwrite("set_clipboard_text_fn", &ImGuiIO::SetClipboardTextFn)
         .def_readwrite("clipboard_user_data", &ImGuiIO::ClipboardUserData)
-        .def_readwrite("ime_set_input_screen_pos_fn", &ImGuiIO::ImeSetInputScreenPosFn)
         .def_readwrite("ime_window_handle", &ImGuiIO::ImeWindowHandle)
         .def_readwrite("render_draw_lists_fn_unused", &ImGuiIO::RenderDrawListsFnUnused)
         .def_readwrite("mouse_pos", &ImGuiIO::MousePos)
@@ -1784,7 +1781,6 @@ PYBIND11_MODULE(deargui, deargui)
         .def_readwrite("elem_count", &ImDrawCmd::ElemCount)
         .def_readwrite("clip_rect", &ImDrawCmd::ClipRect)
         .def_readwrite("texture_id", &ImDrawCmd::TextureId)
-        .def_readwrite("user_callback", &ImDrawCmd::UserCallback)
         .def_readwrite("user_callback_data", &ImDrawCmd::UserCallbackData)
         .def(py::init<>())
 

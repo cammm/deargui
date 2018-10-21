@@ -1,9 +1,24 @@
+import sys
 import setuptools
 
 class get_pybind_include(object):
     def __str__(self):
         import pybind11
         return pybind11.get_include()
+
+if sys.platform == 'win32':
+  compile_args = [
+    '/bigobj',
+    '/DImTextureID=int',
+    '/DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1',
+  ]
+else:
+  compile_args = [
+    '-std=c++14',
+    '-Wno-null-conversion',
+    '-DImTextureID=int',
+    '-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1',
+  ]
 
 module = setuptools.Extension("deargui", [
     'imgui/imgui.cpp',
@@ -13,7 +28,7 @@ module = setuptools.Extension("deargui", [
     'deargui/deargui.cpp',
   ],
   include_dirs = [get_pybind_include(), 'imgui'],
-  extra_compile_args = ['/bigobj', '/DImTextureID=int', '/DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1'],
+  extra_compile_args = compile_args,
   language = 'c++',
 )
 
