@@ -83,6 +83,44 @@ PYBIND11_MODULE(deargui, deargui)
 """
 
 FOOTER = """
+    DrawData.def_property_readonly("cmd_lists", [](const ImDrawData& self)
+    {
+        py::list ret;
+        for(int i = 0; i < self.CmdListsCount; i++)
+        {
+            ret.append(self.CmdLists[i]);
+        }
+        return ret;
+    });
+    DrawVert.def_property_readonly_static("pos_offset", [](py::object)
+    {
+        return IM_OFFSETOF(ImDrawVert, pos);
+    });
+    DrawVert.def_property_readonly_static("uv_offset", [](py::object)
+    {
+        return IM_OFFSETOF(ImDrawVert, uv);
+    });
+    DrawVert.def_property_readonly_static("col_offset", [](py::object)
+    {
+        return IM_OFFSETOF(ImDrawVert, col);
+    });
+    FontAtlas.def("get_tex_data_as_alpha8", [](ImFontAtlas& atlas)
+    {
+        unsigned char* pixels;
+        int width, height, bytes_per_pixel;
+        atlas.GetTexDataAsAlpha8(&pixels, &width, &height, &bytes_per_pixel);
+        std::string data((char*)pixels, width * height * bytes_per_pixel);
+        return std::make_tuple(width, height, py::bytes(data));
+    });
+    FontAtlas.def("get_tex_data_as_rgba32", [](ImFontAtlas& atlas)
+    {
+        unsigned char* pixels;
+        int width, height, bytes_per_pixel;
+        atlas.GetTexDataAsRGBA32(&pixels, &width, &height, &bytes_per_pixel);
+        std::string data((char*)pixels, width * height * bytes_per_pixel);
+        return std::make_tuple(width, height, py::bytes(data));
+    });
+
     template_ImVector<char>(deargui, "Vector_char");
     template_ImVector<float>(deargui, "Vector_float");
     template_ImVector<unsigned char>(deargui, "Vector_unsignedchar");
@@ -91,60 +129,11 @@ FOOTER = """
     template_ImVector<ImDrawVert>(deargui, "Vector_DrawVert");
     template_ImVector<ImFontGlyph>(deargui, "Vector_FontGlyph");
 }
-
-"""
-
-
-EXTENSIONS = {}
-EXTENSIONS["ImDrawData"] = """
-        .def_property_readonly("cmd_lists", [](const ImDrawData& self)
-        {
-            py::list ret;
-            for(int i = 0; i < self.CmdListsCount; i++)
-            {
-                ret.append(self.CmdLists[i]);
-            }
-            return ret;
-        })
-"""
-EXTENSIONS["ImDrawVert"] = """
-        .def_property_readonly_static("pos_offset", [](py::object)
-        {
-            return IM_OFFSETOF(ImDrawVert, pos);
-        })
-        .def_property_readonly_static("uv_offset", [](py::object)
-        {
-            return IM_OFFSETOF(ImDrawVert, uv);
-        })
-        .def_property_readonly_static("col_offset", [](py::object)
-        {
-            return IM_OFFSETOF(ImDrawVert, col);
-        })
-"""
-EXTENSIONS["ImFontAtlas"] = """
-        .def("get_tex_data_as_alpha8", [](ImFontAtlas& atlas)
-        {
-            unsigned char* pixels;
-            int width, height, bytes_per_pixel;
-            atlas.GetTexDataAsAlpha8(&pixels, &width, &height, &bytes_per_pixel);
-            std::string data((char*)pixels, width * height * bytes_per_pixel);
-            return std::make_tuple(width, height, py::bytes(data));
-        })
-        .def("get_tex_data_as_rgba32", [](ImFontAtlas& atlas)
-        {
-            unsigned char* pixels;
-            int width, height, bytes_per_pixel;
-            atlas.GetTexDataAsRGBA32(&pixels, &width, &height, &bytes_per_pixel);
-            std::string data((char*)pixels, width * height * bytes_per_pixel);
-            return std::make_tuple(width, height, py::bytes(data));
-        })
 """
 
 EXCLUDES = set(
 [
     # Fixme
-    'ImGui::SetNextWindowSizeConstraints',
-    'ImGui::IsPopupOpen',
     'ImGui::DragFloat',
     'ImGui::Combo',
     'ImGui::InputText',
@@ -153,7 +142,18 @@ EXCLUDES = set(
     'ImGui::PlotLines',
     "ImGui::PlotHistogram",
     'ImFont::CalcTextSizeA',
+
+    # Mutable Vector
     "ImGuiTextFilter::Filters",
+
+    # Out Params
+    'ImGui::CalcListClipping',
+    'ImGui::ColorConvertRGBtoHSV',
+    'ImGui::ColorConvertHSVtoRGB',
+    'ImGui::SaveIniSettingsToMemory',
+
+    # Callbacks
+    'ImGui::SetNextWindowSizeConstraints',
     "ImGuiIO::GetClipboardTextFn",
     "ImGuiIO::SetClipboardTextFn",
     "ImGuiIO::ImeSetInputScreenPosFn",
@@ -185,11 +185,22 @@ EXCLUDES = set(
     'ImFontAtlas::CustomRects',
     'ImFontAtlas::ConfigData',
     'ImFontAtlas::CustomRectIds',
+    'ImFontAtlas::AddCustomRectRegular',
+    'ImFontAtlas::AddCustomRectFontGlyph',
+    'ImFontAtlas::GetCustomRectByIndex',
+    'ImFontAtlas::CalcCustomRectUV',
+    'ImFontAtlas::GetMouseCursorTexData',
     'ImGui::SetAllocatorFunctions',
     'ImGui::MemAlloc',
     'ImGui::MemFree',
     'ImNewDummy',
+    'ImGuiTextBuffer',
+    'CustomRect',
+    'GlyphRangesBuilder',
+])
 
+OVERLOADED = set([
+    "ImGui::IsPopupOpen",
 ])
 
 def snakecase(name):
@@ -217,6 +228,12 @@ def format_enum(name):
     name = name.rstrip('_')
     name = snakecase(name).upper()
     return name
+
+def module(cursor):
+    if cursor is None:
+        return 'deargui'
+    else:
+        return format_type(cursor.spelling)
 
 def is_excluded(cursor):
     if name(cursor) in EXCLUDES:
@@ -246,17 +263,14 @@ def is_class_mappable(cursor):
 def is_function_mappable(cursor):
     if 'operator' in cursor.spelling:
         return False
-    if cursor.type.is_function_variadic():
-        return False
     if is_excluded(cursor):
         return False
-    # for argument in cursor.get_arguments():
-    #     if argument.type.get_canonical().kind == cindex.TypeKind.INCOMPLETEARRAY:
-    #         return False
-    #     if argument.type.get_canonical().kind == cindex.TypeKind.POINTER:
-    #         ptr = argument.type.get_canonical().get_pointee().kind
-    #         if ptr in [cindex.TypeKind.UNEXPOSED, cindex.TypeKind.POINTER, cindex.TypeKind.FUNCTIONPROTO]:
-    #             return False
+    for argument in cursor.get_arguments():
+        if argument.type.get_canonical().kind == cindex.TypeKind.POINTER:
+            ptr = argument.type.get_canonical().get_pointee().kind
+            if ptr == cindex.TypeKind.FUNCTIONPROTO:
+                return False
+
     return True
 
 def is_property_mappable(cursor):
@@ -276,11 +290,17 @@ def is_property_readonly(cursor):
 
 def is_overloaded(cursor):
     if not hasattr(is_overloaded, 'overloaded'):
-        is_overloaded.overloaded = set()
+        is_overloaded.overloaded = set(OVERLOADED)
     return name(cursor) in is_overloaded.overloaded
 
 def arg_types(arguments):
     return ', '.join([a.type.spelling for a in arguments])
+
+def arg_names(arguments):
+    return ', '.join([a.spelling for a in arguments])
+
+def arg_string(arguments):
+    return ', '.join([' '.join([t.spelling for t in a.get_tokens()]) for a in arguments])
 
 def default_from_tokens(tokens):
     joined = ''.join([t.spelling for t in tokens])
@@ -299,7 +319,7 @@ def write_pyargs(arguments):
                 default = default_from_tokens(child.get_tokens())
         if len(default):
             default = ' = ' + default
-        out('   , py::arg("{}"){}'.format(format_attribute(argument.spelling), default))
+        out(', py::arg("{}"){}'.format(format_attribute(argument.spelling), default))
 
 def parse_enum(cursor):
     out('py::enum_<{cname}>(deargui, "{pyname}")'.format(
@@ -316,63 +336,56 @@ def parse_enum(cursor):
     out.indent -= 1
     out('')
 
-def parse_function(cursor):
+def parse_constructor(cursor, cls):
+    arguments = [a for a in cursor.get_arguments()]
+    if len(arguments):
+        out('{}.def(py::init<{}>()'.format(module(cls), arg_types(arguments)))
+        write_pyargs(arguments)
+        out(');')
+    else:
+        out('{}.def(py::init<>());'.format(module(cls)))
+
+def parse_field(cursor, cls):
+    pyname = format_attribute(cursor.spelling)
+    cname = name(cursor)
+    if is_property_mappable(cursor):
+        if is_property_readonly(cursor):
+            out('{}.def_readonly("{}", &{});'.format(module(cls), pyname, cname))
+        else:
+            out('{}.def_readwrite("{}", &{});'.format(module(cls), pyname, cname))
+
+def parse_function(cursor, cls=None):
     if is_function_mappable(cursor):
+        mname = module(cls)
         arguments = [a for a in cursor.get_arguments()]
         cname = '&' + name(cursor)
         pyname = format_attribute(cursor.spelling)
         if is_overloaded(cursor):
             cname = 'py::overload_cast<{}>({})'.format(arg_types(arguments), cname)
-        if len(arguments):
-            out('deargui.def("{}", {}'.format(pyname, cname))
+        if cursor.type.is_function_variadic():
+            result = cursor.type.get_result()
+            out('{}.def("{}", []({})'.format(mname, pyname, arg_string(arguments)))
+            out('{')
+            out('    return {}({});'.format(name(cursor), arg_names(arguments)))
+            out('}')
             write_pyargs(arguments)
             out(', py::return_value_policy::automatic_reference);')
         else:
-            out('deargui.def("{}", {}, py::return_value_policy::automatic_reference);'.format(pyname, cname))
+            out('{}.def("{}", {}'.format(mname, pyname, cname))
+            write_pyargs(arguments)
+            out(', py::return_value_policy::automatic_reference);')
 
 def parse_class(cursor):
     if is_class_mappable(cursor):
-        out('py::class_<{cname}>(deargui, "{pyname}")'.format(
-            cname = name(cursor),
-            pyname = format_type(cursor.spelling)
-        ))
-        out.indent += 1
+        clsname = format_type(cursor.spelling)
+        out('py::class_<{}> {}(deargui, "{}");'.format(name(cursor), clsname, clsname))
         for child in cursor.get_children():
             if child.kind == cindex.CursorKind.CONSTRUCTOR:
-                arguments = [a for a in child.get_arguments()]
-                if len(arguments):
-                    out('.def(py::init<{}>()'.format(arg_types(arguments)))
-                    write_pyargs(arguments)
-                    out(')')
-                else:
-                    out('.def(py::init<>())')
+                parse_constructor(child, cursor)
             elif child.kind == cindex.CursorKind.CXX_METHOD:
-                if is_function_mappable(child):
-                    arguments = [a for a in child.get_arguments()]
-                    pyname = format_attribute(child.spelling)
-                    cname = '&' + name(child)
-                    if is_overloaded(child):
-                        cname = 'py::overload_cast<{}>({})'.format(arg_types(arguments), cname)
-                    if len(arguments):
-                        out('.def("{}", {}'.format(pyname, cname))
-                        write_pyargs(arguments)
-                        out(')')
-                    else:
-                        out('.def("{}", {})'.format(pyname, cname))
+                parse_function(child, cursor)
             elif child.kind == cindex.CursorKind.FIELD_DECL:
-                pyname = format_attribute(child.spelling)
-                cname = name(child)
-                if is_property_mappable(child):
-                    if is_property_readonly(child):
-                        out('.def_readonly("{}", &{})'.format(pyname, cname))
-                    else:
-                        out('.def_readwrite("{}", &{})'.format(pyname, cname))
-
-        # Write any manual extensions for this class
-        out(EXTENSIONS.get(cursor.spelling, '').strip())
-        out.indent -= 1
-        out(';')
-        out('')
+                parse_field(child, cursor)
 
 def parse_definitions(root):
     for cursor in root.get_children():
@@ -389,7 +402,7 @@ def parse_overloads(cursor):
     if not hasattr(parse_overloads, 'visited'):
         parse_overloads.visited = set()
     if not hasattr(is_overloaded, 'overloaded'):
-        is_overloaded.overloaded = set()
+        is_overloaded.overloaded = set(OVERLOADED)
     for child in cursor.get_children():
         if child.kind in [cindex.CursorKind.CXX_METHOD, cindex.CursorKind.FUNCTION_DECL]:
             key = name(child)
