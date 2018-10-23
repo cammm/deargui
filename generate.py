@@ -6,6 +6,7 @@ from clang import cindex
 
 HEADER = """
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include "imgui.h"
 #include "imgui_internal.h"
 namespace py = pybind11;
@@ -133,26 +134,25 @@ FOOTER = """
 
 EXCLUDES = set(
 [
-    # Fixme
-    'ImGui::DragFloat',
-    'ImGui::Combo',
-    'ImGui::InputText',
-    'ImGui::InputTextMultiline',
-    'ImGui::ListBox',
-    'ImGui::PlotLines',
-    "ImGui::PlotHistogram",
-    'ImFont::CalcTextSizeA',
+    "ImGui::DragFloat2",
 
     # Mutable Vector
     "ImGuiTextFilter::Filters",
 
     # Out Params
+    'ImFont::CalcTextSizeA',
     'ImGui::CalcListClipping',
     'ImGui::ColorConvertRGBtoHSV',
     'ImGui::ColorConvertHSVtoRGB',
     'ImGui::SaveIniSettingsToMemory',
 
     # Callbacks
+    'ImGui::Combo',
+    'ImGui::InputText',
+    'ImGui::InputTextMultiline',
+    'ImGui::ListBox',
+    'ImGui::PlotLines',
+    "ImGui::PlotHistogram",
     'ImGui::SetNextWindowSizeConstraints',
     "ImGuiIO::GetClipboardTextFn",
     "ImGuiIO::SetClipboardTextFn",
@@ -196,7 +196,6 @@ EXCLUDES = set(
     'ImNewDummy',
     'ImGuiTextBuffer',
     'CustomRect',
-    'GlyphRangesBuilder',
 ])
 
 OVERLOADED = set([
@@ -293,14 +292,27 @@ def is_overloaded(cursor):
         is_overloaded.overloaded = set(OVERLOADED)
     return name(cursor) in is_overloaded.overloaded
 
+def arg_type(argument):
+    if argument.type.kind == cindex.TypeKind.CONSTANTARRAY:
+        return 'std::array<{}, {}>&'.format(
+            argument.type.get_array_element_type().spelling,
+            argument.type.get_array_size()
+        )
+    return argument.type.spelling
+
+def arg_name(argument):
+    if argument.type.kind == cindex.TypeKind.CONSTANTARRAY:
+        return '&{}[0]'.format(argument.spelling)
+    return argument.spelling
+
 def arg_types(arguments):
-    return ', '.join([a.type.spelling for a in arguments])
+    return ', '.join([arg_type(a) for a in arguments])
 
 def arg_names(arguments):
-    return ', '.join([a.spelling for a in arguments])
+    return ', '.join([arg_name(a) for a in arguments])
 
 def arg_string(arguments):
-    return ', '.join([' '.join([t.spelling for t in a.get_tokens()]) for a in arguments])
+    return ', '.join(['{} {}'.format(arg_type(a), a.spelling) for a in arguments])
 
 def default_from_tokens(tokens):
     joined = ''.join([t.spelling for t in tokens])
@@ -354,6 +366,14 @@ def parse_field(cursor, cls):
         else:
             out('{}.def_readwrite("{}", &{});'.format(module(cls), pyname, cname))
 
+def should_wrap_function(cursor):
+    if cursor.type.is_function_variadic():
+        return True
+    for arg in cursor.get_arguments():
+        if arg.type.kind == cindex.TypeKind.CONSTANTARRAY:
+            return True
+    return False
+
 def parse_function(cursor, cls=None):
     if is_function_mappable(cursor):
         mname = module(cls)
@@ -362,7 +382,7 @@ def parse_function(cursor, cls=None):
         pyname = format_attribute(cursor.spelling)
         if is_overloaded(cursor):
             cname = 'py::overload_cast<{}>({})'.format(arg_types(arguments), cname)
-        if cursor.type.is_function_variadic():
+        if should_wrap_function(cursor):
             result = cursor.type.get_result()
             out('{}.def("{}", []({})'.format(mname, pyname, arg_string(arguments)))
             out('{')

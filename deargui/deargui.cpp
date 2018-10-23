@@ -1,5 +1,6 @@
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include "imgui.h"
 #include "imgui_internal.h"
 namespace py = pybind11;
@@ -564,7 +565,7 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("end_combo", &ImGui::EndCombo
     , py::return_value_policy::automatic_reference);
-    deargui.def("drag_float2", &ImGui::DragFloat2
+    deargui.def("drag_float", &ImGui::DragFloat
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_speed") = 1.0f
@@ -573,7 +574,10 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("drag_float3", &ImGui::DragFloat3
+    deargui.def("drag_float3", [](const char * label, std::array<float, 3>& v, float v_speed, float v_min, float v_max, const char * format, float power)
+    {
+        return ImGui::DragFloat3(label, &v[0], v_speed, v_min, v_max, format, power);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_speed") = 1.0f
@@ -582,7 +586,10 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("drag_float4", &ImGui::DragFloat4
+    deargui.def("drag_float4", [](const char * label, std::array<float, 4>& v, float v_speed, float v_min, float v_max, const char * format, float power)
+    {
+        return ImGui::DragFloat4(label, &v[0], v_speed, v_min, v_max, format, power);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_speed") = 1.0f
@@ -610,7 +617,10 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("v_max") = 0
     , py::arg("format") = nullptr
     , py::return_value_policy::automatic_reference);
-    deargui.def("drag_int2", &ImGui::DragInt2
+    deargui.def("drag_int2", [](const char * label, std::array<int, 2>& v, float v_speed, int v_min, int v_max, const char * format)
+    {
+        return ImGui::DragInt2(label, &v[0], v_speed, v_min, v_max, format);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_speed") = 1.0f
@@ -618,7 +628,10 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("v_max") = 0
     , py::arg("format") = nullptr
     , py::return_value_policy::automatic_reference);
-    deargui.def("drag_int3", &ImGui::DragInt3
+    deargui.def("drag_int3", [](const char * label, std::array<int, 3>& v, float v_speed, int v_min, int v_max, const char * format)
+    {
+        return ImGui::DragInt3(label, &v[0], v_speed, v_min, v_max, format);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_speed") = 1.0f
@@ -626,7 +639,10 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("v_max") = 0
     , py::arg("format") = nullptr
     , py::return_value_policy::automatic_reference);
-    deargui.def("drag_int4", &ImGui::DragInt4
+    deargui.def("drag_int4", [](const char * label, std::array<int, 4>& v, float v_speed, int v_min, int v_max, const char * format)
+    {
+        return ImGui::DragInt4(label, &v[0], v_speed, v_min, v_max, format);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_speed") = 1.0f
@@ -673,7 +689,10 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("slider_float2", &ImGui::SliderFloat2
+    deargui.def("slider_float2", [](const char * label, std::array<float, 2>& v, float v_min, float v_max, const char * format, float power)
+    {
+        return ImGui::SliderFloat2(label, &v[0], v_min, v_max, format, power);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_min")
@@ -681,7 +700,10 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("slider_float3", &ImGui::SliderFloat3
+    deargui.def("slider_float3", [](const char * label, std::array<float, 3>& v, float v_min, float v_max, const char * format, float power)
+    {
+        return ImGui::SliderFloat3(label, &v[0], v_min, v_max, format, power);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_min")
@@ -689,7 +711,10 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("slider_float4", &ImGui::SliderFloat4
+    deargui.def("slider_float4", [](const char * label, std::array<float, 4>& v, float v_min, float v_max, const char * format, float power)
+    {
+        return ImGui::SliderFloat4(label, &v[0], v_min, v_max, format, power);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_min")
@@ -710,21 +735,30 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("v_max")
     , py::arg("format") = nullptr
     , py::return_value_policy::automatic_reference);
-    deargui.def("slider_int2", &ImGui::SliderInt2
+    deargui.def("slider_int2", [](const char * label, std::array<int, 2>& v, int v_min, int v_max, const char * format)
+    {
+        return ImGui::SliderInt2(label, &v[0], v_min, v_max, format);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_min")
     , py::arg("v_max")
     , py::arg("format") = nullptr
     , py::return_value_policy::automatic_reference);
-    deargui.def("slider_int3", &ImGui::SliderInt3
+    deargui.def("slider_int3", [](const char * label, std::array<int, 3>& v, int v_min, int v_max, const char * format)
+    {
+        return ImGui::SliderInt3(label, &v[0], v_min, v_max, format);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_min")
     , py::arg("v_max")
     , py::arg("format") = nullptr
     , py::return_value_policy::automatic_reference);
-    deargui.def("slider_int4", &ImGui::SliderInt4
+    deargui.def("slider_int4", [](const char * label, std::array<int, 4>& v, int v_min, int v_max, const char * format)
+    {
+        return ImGui::SliderInt4(label, &v[0], v_min, v_max, format);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_min")
@@ -785,19 +819,28 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("extra_flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("input_float2", &ImGui::InputFloat2
+    deargui.def("input_float2", [](const char * label, std::array<float, 2>& v, const char * format, ImGuiInputTextFlags extra_flags)
+    {
+        return ImGui::InputFloat2(label, &v[0], format, extra_flags);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("format") = nullptr
     , py::arg("extra_flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("input_float3", &ImGui::InputFloat3
+    deargui.def("input_float3", [](const char * label, std::array<float, 3>& v, const char * format, ImGuiInputTextFlags extra_flags)
+    {
+        return ImGui::InputFloat3(label, &v[0], format, extra_flags);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("format") = nullptr
     , py::arg("extra_flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("input_float4", &ImGui::InputFloat4
+    deargui.def("input_float4", [](const char * label, std::array<float, 4>& v, const char * format, ImGuiInputTextFlags extra_flags)
+    {
+        return ImGui::InputFloat4(label, &v[0], format, extra_flags);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("format") = nullptr
@@ -810,17 +853,26 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("step_fast") = 100
     , py::arg("extra_flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("input_int2", &ImGui::InputInt2
+    deargui.def("input_int2", [](const char * label, std::array<int, 2>& v, ImGuiInputTextFlags extra_flags)
+    {
+        return ImGui::InputInt2(label, &v[0], extra_flags);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("extra_flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("input_int3", &ImGui::InputInt3
+    deargui.def("input_int3", [](const char * label, std::array<int, 3>& v, ImGuiInputTextFlags extra_flags)
+    {
+        return ImGui::InputInt3(label, &v[0], extra_flags);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("extra_flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("input_int4", &ImGui::InputInt4
+    deargui.def("input_int4", [](const char * label, std::array<int, 4>& v, ImGuiInputTextFlags extra_flags)
+    {
+        return ImGui::InputInt4(label, &v[0], extra_flags);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("extra_flags") = 0
@@ -852,22 +904,34 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("extra_flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("color_edit3", &ImGui::ColorEdit3
+    deargui.def("color_edit3", [](const char * label, std::array<float, 3>& col, ImGuiColorEditFlags flags)
+    {
+        return ImGui::ColorEdit3(label, &col[0], flags);
+    }
     , py::arg("label")
     , py::arg("col")
     , py::arg("flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("color_edit4", &ImGui::ColorEdit4
+    deargui.def("color_edit4", [](const char * label, std::array<float, 4>& col, ImGuiColorEditFlags flags)
+    {
+        return ImGui::ColorEdit4(label, &col[0], flags);
+    }
     , py::arg("label")
     , py::arg("col")
     , py::arg("flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("color_picker3", &ImGui::ColorPicker3
+    deargui.def("color_picker3", [](const char * label, std::array<float, 3>& col, ImGuiColorEditFlags flags)
+    {
+        return ImGui::ColorPicker3(label, &col[0], flags);
+    }
     , py::arg("label")
     , py::arg("col")
     , py::arg("flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("color_picker4", &ImGui::ColorPicker4
+    deargui.def("color_picker4", [](const char * label, std::array<float, 4>& col, ImGuiColorEditFlags flags, const float * ref_col)
+    {
+        return ImGui::ColorPicker4(label, &col[0], flags, ref_col);
+    }
     , py::arg("label")
     , py::arg("col")
     , py::arg("flags") = 0

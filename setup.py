@@ -16,6 +16,8 @@ else:
   compile_args = [
     '-std=c++14',
     '-Wno-null-conversion',
+    '-Wno-format-security',
+    '-Wno-int-to-void-pointer-cast',
     '-DImTextureID=int',
     '-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1',
   ]
