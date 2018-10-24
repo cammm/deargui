@@ -134,8 +134,6 @@ FOOTER = """
 
 EXCLUDES = set(
 [
-    "ImGui::DragFloat2",
-
     # Mutable Vector
     "ImGuiTextFilter::Filters",
 

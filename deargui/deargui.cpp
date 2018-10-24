@@ -582,6 +582,19 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
+    deargui.def("drag_float2", [](const char * label, std::array<float, 2>& v, float v_speed, float v_min, float v_max, const char * format, float power)
+    {
+        auto ret = ImGui::DragFloat2(label, &v[0], v_speed, v_min, v_max, format, power);
+        return std::make_tuple(ret, v);
+    }
+    , py::arg("label")
+    , py::arg("v")
+    , py::arg("v_speed") = 1.0f
+    , py::arg("v_min") = 0.0f
+    , py::arg("v_max") = 0.0f
+    , py::arg("format") = nullptr
+    , py::arg("power") = 1.0f
+    , py::return_value_policy::automatic_reference);
     deargui.def("drag_float3", [](const char * label, std::array<float, 3>& v, float v_speed, float v_min, float v_max, const char * format, float power)
     {
         auto ret = ImGui::DragFloat3(label, &v[0], v_speed, v_min, v_max, format, power);
