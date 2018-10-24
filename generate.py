@@ -269,8 +269,13 @@ def is_function_mappable(cursor):
             ptr = argument.type.get_canonical().get_pointee().kind
             if ptr == cindex.TypeKind.FUNCTIONPROTO:
                 return False
-
+        if argument.type.spelling == 'va_list':
+            return False
     return True
+
+def is_function_void_return(cursor):
+    result = cursor.type.get_result()
+    return result.kind == cindex.TypeKind.VOID
 
 def is_property_mappable(cursor):
     if is_excluded(cursor):
@@ -372,7 +377,40 @@ def should_wrap_function(cursor):
     for arg in cursor.get_arguments():
         if arg.type.kind == cindex.TypeKind.CONSTANTARRAY:
             return True
+        if should_return_argument(arg):
+            return True
     return False
+
+def should_return_argument(argument):
+    argtype = argument.type.get_canonical()
+    if argtype.kind == cindex.TypeKind.LVALUEREFERENCE:
+        if not argtype.get_pointee().is_const_qualified():
+            return True
+    if argtype.kind == cindex.TypeKind.CONSTANTARRAY:
+        return True
+    if argtype.kind == cindex.TypeKind.POINTER:
+        ptr = argtype.get_pointee()
+        kinds = [
+            cindex.TypeKind.BOOL,
+            cindex.TypeKind.FLOAT,
+            cindex.TypeKind.DOUBLE,
+            cindex.TypeKind.INT,
+            cindex.TypeKind.UINT,
+            cindex.TypeKind.USHORT,
+        ]
+        if not ptr.is_const_qualified() and ptr.kind in kinds:
+            return True
+    return False
+
+def get_function_return(cursor):
+    returned = [a.spelling for a in cursor.get_arguments() if should_return_argument(a)]
+    if not is_function_void_return(cursor):
+        returned.insert(0, 'ret')
+    if len(returned) > 1:
+        return 'std::make_tuple({})'.format(', '.join(returned))
+    if len(returned) == 1:
+        return returned[0]
+    return ''
 
 def parse_function(cursor, cls=None):
     if is_function_mappable(cursor):
@@ -383,10 +421,11 @@ def parse_function(cursor, cls=None):
         if is_overloaded(cursor):
             cname = 'py::overload_cast<{}>({})'.format(arg_types(arguments), cname)
         if should_wrap_function(cursor):
-            result = cursor.type.get_result()
             out('{}.def("{}", []({})'.format(mname, pyname, arg_string(arguments)))
             out('{')
-            out('    return {}({});'.format(name(cursor), arg_names(arguments)))
+            ret = '' if is_function_void_return(cursor) else 'auto ret = '
+            out('    {}{}({});'.format(ret, name(cursor), arg_names(arguments)))
+            out('    return {};'.format(get_function_return(cursor)))
             out('}')
             write_pyargs(arguments)
             out(', py::return_value_policy::automatic_reference);')

@@ -127,10 +127,18 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("get_draw_data", &ImGui::GetDrawData
     , py::return_value_policy::automatic_reference);
-    deargui.def("show_demo_window", &ImGui::ShowDemoWindow
+    deargui.def("show_demo_window", [](bool * p_open)
+    {
+        ImGui::ShowDemoWindow(p_open);
+        return p_open;
+    }
     , py::arg("p_open") = nullptr
     , py::return_value_policy::automatic_reference);
-    deargui.def("show_metrics_window", &ImGui::ShowMetricsWindow
+    deargui.def("show_metrics_window", [](bool * p_open)
+    {
+        ImGui::ShowMetricsWindow(p_open);
+        return p_open;
+    }
     , py::arg("p_open") = nullptr
     , py::return_value_policy::automatic_reference);
     deargui.def("show_style_editor", &ImGui::ShowStyleEditor
@@ -155,7 +163,11 @@ PYBIND11_MODULE(deargui, deargui)
     deargui.def("style_colors_light", &ImGui::StyleColorsLight
     , py::arg("dst") = nullptr
     , py::return_value_policy::automatic_reference);
-    deargui.def("begin", &ImGui::Begin
+    deargui.def("begin", [](const char * name, bool * p_open, ImGuiWindowFlags flags)
+    {
+        auto ret = ImGui::Begin(name, p_open, flags);
+        return std::make_tuple(ret, p_open);
+    }
     , py::arg("name")
     , py::arg("p_open") = nullptr
     , py::arg("flags") = 0
@@ -439,67 +451,47 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("text", [](const char * fmt)
     {
-        return ImGui::Text(fmt);
+        ImGui::Text(fmt);
+        return ;
     }
     , py::arg("fmt")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("text_v", &ImGui::TextV
-    , py::arg("fmt")
-    , py::arg("args")
     , py::return_value_policy::automatic_reference);
     deargui.def("text_colored", [](const ImVec4 & col, const char * fmt)
     {
-        return ImGui::TextColored(col, fmt);
+        ImGui::TextColored(col, fmt);
+        return ;
     }
     , py::arg("col")
     , py::arg("fmt")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("text_colored_v", &ImGui::TextColoredV
-    , py::arg("col")
-    , py::arg("fmt")
-    , py::arg("args")
     , py::return_value_policy::automatic_reference);
     deargui.def("text_disabled", [](const char * fmt)
     {
-        return ImGui::TextDisabled(fmt);
+        ImGui::TextDisabled(fmt);
+        return ;
     }
     , py::arg("fmt")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("text_disabled_v", &ImGui::TextDisabledV
-    , py::arg("fmt")
-    , py::arg("args")
     , py::return_value_policy::automatic_reference);
     deargui.def("text_wrapped", [](const char * fmt)
     {
-        return ImGui::TextWrapped(fmt);
+        ImGui::TextWrapped(fmt);
+        return ;
     }
     , py::arg("fmt")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("text_wrapped_v", &ImGui::TextWrappedV
-    , py::arg("fmt")
-    , py::arg("args")
     , py::return_value_policy::automatic_reference);
     deargui.def("label_text", [](const char * label, const char * fmt)
     {
-        return ImGui::LabelText(label, fmt);
+        ImGui::LabelText(label, fmt);
+        return ;
     }
     , py::arg("label")
     , py::arg("fmt")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("label_text_v", &ImGui::LabelTextV
-    , py::arg("label")
-    , py::arg("fmt")
-    , py::arg("args")
     , py::return_value_policy::automatic_reference);
     deargui.def("bullet_text", [](const char * fmt)
     {
-        return ImGui::BulletText(fmt);
+        ImGui::BulletText(fmt);
+        return ;
     }
     , py::arg("fmt")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("bullet_text_v", &ImGui::BulletTextV
-    , py::arg("fmt")
-    , py::arg("args")
     , py::return_value_policy::automatic_reference);
     deargui.def("button", &ImGui::Button
     , py::arg("label")
@@ -533,11 +525,19 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("bg_col") = ImVec4(0,0,0,0)
     , py::arg("tint_col") = ImVec4(1,1,1,1)
     , py::return_value_policy::automatic_reference);
-    deargui.def("checkbox", &ImGui::Checkbox
+    deargui.def("checkbox", [](const char * label, bool * v)
+    {
+        auto ret = ImGui::Checkbox(label, v);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::return_value_policy::automatic_reference);
-    deargui.def("checkbox_flags", &ImGui::CheckboxFlags
+    deargui.def("checkbox_flags", [](const char * label, unsigned int * flags, unsigned int flags_value)
+    {
+        auto ret = ImGui::CheckboxFlags(label, flags, flags_value);
+        return std::make_tuple(ret, flags);
+    }
     , py::arg("label")
     , py::arg("flags")
     , py::arg("flags_value")
@@ -546,7 +546,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("label")
     , py::arg("active")
     , py::return_value_policy::automatic_reference);
-    deargui.def("radio_button", py::overload_cast<const char *, int *, int>(&ImGui::RadioButton)
+    deargui.def("radio_button", [](const char * label, int * v, int v_button)
+    {
+        auto ret = ImGui::RadioButton(label, v, v_button);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_button")
@@ -565,7 +569,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("end_combo", &ImGui::EndCombo
     , py::return_value_policy::automatic_reference);
-    deargui.def("drag_float", &ImGui::DragFloat
+    deargui.def("drag_float", [](const char * label, float * v, float v_speed, float v_min, float v_max, const char * format, float power)
+    {
+        auto ret = ImGui::DragFloat(label, v, v_speed, v_min, v_max, format, power);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_speed") = 1.0f
@@ -576,7 +584,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("drag_float3", [](const char * label, std::array<float, 3>& v, float v_speed, float v_min, float v_max, const char * format, float power)
     {
-        return ImGui::DragFloat3(label, &v[0], v_speed, v_min, v_max, format, power);
+        auto ret = ImGui::DragFloat3(label, &v[0], v_speed, v_min, v_max, format, power);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -588,7 +597,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("drag_float4", [](const char * label, std::array<float, 4>& v, float v_speed, float v_min, float v_max, const char * format, float power)
     {
-        return ImGui::DragFloat4(label, &v[0], v_speed, v_min, v_max, format, power);
+        auto ret = ImGui::DragFloat4(label, &v[0], v_speed, v_min, v_max, format, power);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -598,7 +608,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("drag_float_range2", &ImGui::DragFloatRange2
+    deargui.def("drag_float_range2", [](const char * label, float * v_current_min, float * v_current_max, float v_speed, float v_min, float v_max, const char * format, const char * format_max, float power)
+    {
+        auto ret = ImGui::DragFloatRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, power);
+        return std::make_tuple(ret, v_current_min, v_current_max);
+    }
     , py::arg("label")
     , py::arg("v_current_min")
     , py::arg("v_current_max")
@@ -609,7 +623,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format_max") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("drag_int", &ImGui::DragInt
+    deargui.def("drag_int", [](const char * label, int * v, float v_speed, int v_min, int v_max, const char * format)
+    {
+        auto ret = ImGui::DragInt(label, v, v_speed, v_min, v_max, format);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_speed") = 1.0f
@@ -619,7 +637,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("drag_int2", [](const char * label, std::array<int, 2>& v, float v_speed, int v_min, int v_max, const char * format)
     {
-        return ImGui::DragInt2(label, &v[0], v_speed, v_min, v_max, format);
+        auto ret = ImGui::DragInt2(label, &v[0], v_speed, v_min, v_max, format);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -630,7 +649,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("drag_int3", [](const char * label, std::array<int, 3>& v, float v_speed, int v_min, int v_max, const char * format)
     {
-        return ImGui::DragInt3(label, &v[0], v_speed, v_min, v_max, format);
+        auto ret = ImGui::DragInt3(label, &v[0], v_speed, v_min, v_max, format);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -641,7 +661,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("drag_int4", [](const char * label, std::array<int, 4>& v, float v_speed, int v_min, int v_max, const char * format)
     {
-        return ImGui::DragInt4(label, &v[0], v_speed, v_min, v_max, format);
+        auto ret = ImGui::DragInt4(label, &v[0], v_speed, v_min, v_max, format);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -650,7 +671,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("v_max") = 0
     , py::arg("format") = nullptr
     , py::return_value_policy::automatic_reference);
-    deargui.def("drag_int_range2", &ImGui::DragIntRange2
+    deargui.def("drag_int_range2", [](const char * label, int * v_current_min, int * v_current_max, float v_speed, int v_min, int v_max, const char * format, const char * format_max)
+    {
+        auto ret = ImGui::DragIntRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max);
+        return std::make_tuple(ret, v_current_min, v_current_max);
+    }
     , py::arg("label")
     , py::arg("v_current_min")
     , py::arg("v_current_max")
@@ -681,7 +706,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("slider_float", &ImGui::SliderFloat
+    deargui.def("slider_float", [](const char * label, float * v, float v_min, float v_max, const char * format, float power)
+    {
+        auto ret = ImGui::SliderFloat(label, v, v_min, v_max, format, power);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_min")
@@ -691,7 +720,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("slider_float2", [](const char * label, std::array<float, 2>& v, float v_min, float v_max, const char * format, float power)
     {
-        return ImGui::SliderFloat2(label, &v[0], v_min, v_max, format, power);
+        auto ret = ImGui::SliderFloat2(label, &v[0], v_min, v_max, format, power);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -702,7 +732,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("slider_float3", [](const char * label, std::array<float, 3>& v, float v_min, float v_max, const char * format, float power)
     {
-        return ImGui::SliderFloat3(label, &v[0], v_min, v_max, format, power);
+        auto ret = ImGui::SliderFloat3(label, &v[0], v_min, v_max, format, power);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -713,7 +744,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("slider_float4", [](const char * label, std::array<float, 4>& v, float v_min, float v_max, const char * format, float power)
     {
-        return ImGui::SliderFloat4(label, &v[0], v_min, v_max, format, power);
+        auto ret = ImGui::SliderFloat4(label, &v[0], v_min, v_max, format, power);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -722,13 +754,21 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("slider_angle", &ImGui::SliderAngle
+    deargui.def("slider_angle", [](const char * label, float * v_rad, float v_degrees_min, float v_degrees_max)
+    {
+        auto ret = ImGui::SliderAngle(label, v_rad, v_degrees_min, v_degrees_max);
+        return std::make_tuple(ret, v_rad);
+    }
     , py::arg("label")
     , py::arg("v_rad")
     , py::arg("v_degrees_min") = -360.0f
     , py::arg("v_degrees_max") = +360.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("slider_int", &ImGui::SliderInt
+    deargui.def("slider_int", [](const char * label, int * v, int v_min, int v_max, const char * format)
+    {
+        auto ret = ImGui::SliderInt(label, v, v_min, v_max, format);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("v_min")
@@ -737,7 +777,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("slider_int2", [](const char * label, std::array<int, 2>& v, int v_min, int v_max, const char * format)
     {
-        return ImGui::SliderInt2(label, &v[0], v_min, v_max, format);
+        auto ret = ImGui::SliderInt2(label, &v[0], v_min, v_max, format);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -747,7 +788,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("slider_int3", [](const char * label, std::array<int, 3>& v, int v_min, int v_max, const char * format)
     {
-        return ImGui::SliderInt3(label, &v[0], v_min, v_max, format);
+        auto ret = ImGui::SliderInt3(label, &v[0], v_min, v_max, format);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -757,7 +799,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("slider_int4", [](const char * label, std::array<int, 4>& v, int v_min, int v_max, const char * format)
     {
-        return ImGui::SliderInt4(label, &v[0], v_min, v_max, format);
+        auto ret = ImGui::SliderInt4(label, &v[0], v_min, v_max, format);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -784,7 +827,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("v_slider_float", &ImGui::VSliderFloat
+    deargui.def("v_slider_float", [](const char * label, const ImVec2 & size, float * v, float v_min, float v_max, const char * format, float power)
+    {
+        auto ret = ImGui::VSliderFloat(label, size, v, v_min, v_max, format, power);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("size")
     , py::arg("v")
@@ -793,7 +840,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("v_slider_int", &ImGui::VSliderInt
+    deargui.def("v_slider_int", [](const char * label, const ImVec2 & size, int * v, int v_min, int v_max, const char * format)
+    {
+        auto ret = ImGui::VSliderInt(label, size, v, v_min, v_max, format);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("size")
     , py::arg("v")
@@ -811,7 +862,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("format") = nullptr
     , py::arg("power") = 1.0f
     , py::return_value_policy::automatic_reference);
-    deargui.def("input_float", &ImGui::InputFloat
+    deargui.def("input_float", [](const char * label, float * v, float step, float step_fast, const char * format, ImGuiInputTextFlags extra_flags)
+    {
+        auto ret = ImGui::InputFloat(label, v, step, step_fast, format, extra_flags);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("step") = 0.0f
@@ -821,7 +876,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("input_float2", [](const char * label, std::array<float, 2>& v, const char * format, ImGuiInputTextFlags extra_flags)
     {
-        return ImGui::InputFloat2(label, &v[0], format, extra_flags);
+        auto ret = ImGui::InputFloat2(label, &v[0], format, extra_flags);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -830,7 +886,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("input_float3", [](const char * label, std::array<float, 3>& v, const char * format, ImGuiInputTextFlags extra_flags)
     {
-        return ImGui::InputFloat3(label, &v[0], format, extra_flags);
+        auto ret = ImGui::InputFloat3(label, &v[0], format, extra_flags);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -839,14 +896,19 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("input_float4", [](const char * label, std::array<float, 4>& v, const char * format, ImGuiInputTextFlags extra_flags)
     {
-        return ImGui::InputFloat4(label, &v[0], format, extra_flags);
+        auto ret = ImGui::InputFloat4(label, &v[0], format, extra_flags);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
     , py::arg("format") = nullptr
     , py::arg("extra_flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("input_int", &ImGui::InputInt
+    deargui.def("input_int", [](const char * label, int * v, int step, int step_fast, ImGuiInputTextFlags extra_flags)
+    {
+        auto ret = ImGui::InputInt(label, v, step, step_fast, extra_flags);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("step") = 1
@@ -855,7 +917,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("input_int2", [](const char * label, std::array<int, 2>& v, ImGuiInputTextFlags extra_flags)
     {
-        return ImGui::InputInt2(label, &v[0], extra_flags);
+        auto ret = ImGui::InputInt2(label, &v[0], extra_flags);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -863,7 +926,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("input_int3", [](const char * label, std::array<int, 3>& v, ImGuiInputTextFlags extra_flags)
     {
-        return ImGui::InputInt3(label, &v[0], extra_flags);
+        auto ret = ImGui::InputInt3(label, &v[0], extra_flags);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
@@ -871,13 +935,18 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("input_int4", [](const char * label, std::array<int, 4>& v, ImGuiInputTextFlags extra_flags)
     {
-        return ImGui::InputInt4(label, &v[0], extra_flags);
+        auto ret = ImGui::InputInt4(label, &v[0], extra_flags);
+        return std::make_tuple(ret, v);
     }
     , py::arg("label")
     , py::arg("v")
     , py::arg("extra_flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("input_double", &ImGui::InputDouble
+    deargui.def("input_double", [](const char * label, double * v, double step, double step_fast, const char * format, ImGuiInputTextFlags extra_flags)
+    {
+        auto ret = ImGui::InputDouble(label, v, step, step_fast, format, extra_flags);
+        return std::make_tuple(ret, v);
+    }
     , py::arg("label")
     , py::arg("v")
     , py::arg("step") = 0.0f
@@ -906,7 +975,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("color_edit3", [](const char * label, std::array<float, 3>& col, ImGuiColorEditFlags flags)
     {
-        return ImGui::ColorEdit3(label, &col[0], flags);
+        auto ret = ImGui::ColorEdit3(label, &col[0], flags);
+        return std::make_tuple(ret, col);
     }
     , py::arg("label")
     , py::arg("col")
@@ -914,7 +984,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("color_edit4", [](const char * label, std::array<float, 4>& col, ImGuiColorEditFlags flags)
     {
-        return ImGui::ColorEdit4(label, &col[0], flags);
+        auto ret = ImGui::ColorEdit4(label, &col[0], flags);
+        return std::make_tuple(ret, col);
     }
     , py::arg("label")
     , py::arg("col")
@@ -922,7 +993,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("color_picker3", [](const char * label, std::array<float, 3>& col, ImGuiColorEditFlags flags)
     {
-        return ImGui::ColorPicker3(label, &col[0], flags);
+        auto ret = ImGui::ColorPicker3(label, &col[0], flags);
+        return std::make_tuple(ret, col);
     }
     , py::arg("label")
     , py::arg("col")
@@ -930,7 +1002,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("color_picker4", [](const char * label, std::array<float, 4>& col, ImGuiColorEditFlags flags, const float * ref_col)
     {
-        return ImGui::ColorPicker4(label, &col[0], flags, ref_col);
+        auto ret = ImGui::ColorPicker4(label, &col[0], flags, ref_col);
+        return std::make_tuple(ret, col);
     }
     , py::arg("label")
     , py::arg("col")
@@ -951,27 +1024,19 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("tree_node", [](const char * str_id, const char * fmt)
     {
-        return ImGui::TreeNode(str_id, fmt);
+        auto ret = ImGui::TreeNode(str_id, fmt);
+        return ret;
     }
     , py::arg("str_id")
     , py::arg("fmt")
     , py::return_value_policy::automatic_reference);
     deargui.def("tree_node", [](const void * ptr_id, const char * fmt)
     {
-        return ImGui::TreeNode(ptr_id, fmt);
+        auto ret = ImGui::TreeNode(ptr_id, fmt);
+        return ret;
     }
     , py::arg("ptr_id")
     , py::arg("fmt")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("tree_node_v", py::overload_cast<const char *, const char *, va_list>(&ImGui::TreeNodeV)
-    , py::arg("str_id")
-    , py::arg("fmt")
-    , py::arg("args")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("tree_node_v", py::overload_cast<const void *, const char *, va_list>(&ImGui::TreeNodeV)
-    , py::arg("ptr_id")
-    , py::arg("fmt")
-    , py::arg("args")
     , py::return_value_policy::automatic_reference);
     deargui.def("tree_node_ex", py::overload_cast<const char *, ImGuiTreeNodeFlags>(&ImGui::TreeNodeEx)
     , py::arg("label")
@@ -979,7 +1044,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("tree_node_ex", [](const char * str_id, ImGuiTreeNodeFlags flags, const char * fmt)
     {
-        return ImGui::TreeNodeEx(str_id, flags, fmt);
+        auto ret = ImGui::TreeNodeEx(str_id, flags, fmt);
+        return ret;
     }
     , py::arg("str_id")
     , py::arg("flags")
@@ -987,23 +1053,12 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("tree_node_ex", [](const void * ptr_id, ImGuiTreeNodeFlags flags, const char * fmt)
     {
-        return ImGui::TreeNodeEx(ptr_id, flags, fmt);
+        auto ret = ImGui::TreeNodeEx(ptr_id, flags, fmt);
+        return ret;
     }
     , py::arg("ptr_id")
     , py::arg("flags")
     , py::arg("fmt")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("tree_node_ex_v", py::overload_cast<const char *, ImGuiTreeNodeFlags, const char *, va_list>(&ImGui::TreeNodeExV)
-    , py::arg("str_id")
-    , py::arg("flags")
-    , py::arg("fmt")
-    , py::arg("args")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("tree_node_ex_v", py::overload_cast<const void *, ImGuiTreeNodeFlags, const char *, va_list>(&ImGui::TreeNodeExV)
-    , py::arg("ptr_id")
-    , py::arg("flags")
-    , py::arg("fmt")
-    , py::arg("args")
     , py::return_value_policy::automatic_reference);
     deargui.def("tree_push", py::overload_cast<const char *>(&ImGui::TreePush)
     , py::arg("str_id")
@@ -1025,7 +1080,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("label")
     , py::arg("flags") = 0
     , py::return_value_policy::automatic_reference);
-    deargui.def("collapsing_header", py::overload_cast<const char *, bool *, ImGuiTreeNodeFlags>(&ImGui::CollapsingHeader)
+    deargui.def("collapsing_header", [](const char * label, bool * p_open, ImGuiTreeNodeFlags flags)
+    {
+        auto ret = ImGui::CollapsingHeader(label, p_open, flags);
+        return std::make_tuple(ret, p_open);
+    }
     , py::arg("label")
     , py::arg("p_open")
     , py::arg("flags") = 0
@@ -1036,7 +1095,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("flags") = 0
     , py::arg("size") = ImVec2(0,0)
     , py::return_value_policy::automatic_reference);
-    deargui.def("selectable", py::overload_cast<const char *, bool *, ImGuiSelectableFlags, const ImVec2 &>(&ImGui::Selectable)
+    deargui.def("selectable", [](const char * label, bool * p_selected, ImGuiSelectableFlags flags, const ImVec2 & size)
+    {
+        auto ret = ImGui::Selectable(label, p_selected, flags, size);
+        return std::make_tuple(ret, p_selected);
+    }
     , py::arg("label")
     , py::arg("p_selected")
     , py::arg("flags") = 0
@@ -1090,7 +1153,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("selected") = false
     , py::arg("enabled") = true
     , py::return_value_policy::automatic_reference);
-    deargui.def("menu_item", py::overload_cast<const char *, const char *, bool *, bool>(&ImGui::MenuItem)
+    deargui.def("menu_item", [](const char * label, const char * shortcut, bool * p_selected, bool enabled)
+    {
+        auto ret = ImGui::MenuItem(label, shortcut, p_selected, enabled);
+        return std::make_tuple(ret, p_selected);
+    }
     , py::arg("label")
     , py::arg("shortcut")
     , py::arg("p_selected")
@@ -1102,13 +1169,10 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("set_tooltip", [](const char * fmt)
     {
-        return ImGui::SetTooltip(fmt);
+        ImGui::SetTooltip(fmt);
+        return ;
     }
     , py::arg("fmt")
-    , py::return_value_policy::automatic_reference);
-    deargui.def("set_tooltip_v", &ImGui::SetTooltipV
-    , py::arg("fmt")
-    , py::arg("args")
     , py::return_value_policy::automatic_reference);
     deargui.def("open_popup", &ImGui::OpenPopup
     , py::arg("str_id")
@@ -1130,7 +1194,11 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("str_id") = nullptr
     , py::arg("mouse_button") = 1
     , py::return_value_policy::automatic_reference);
-    deargui.def("begin_popup_modal", &ImGui::BeginPopupModal
+    deargui.def("begin_popup_modal", [](const char * name, bool * p_open, ImGuiWindowFlags flags)
+    {
+        auto ret = ImGui::BeginPopupModal(name, p_open, flags);
+        return std::make_tuple(ret, p_open);
+    }
     , py::arg("name")
     , py::arg("p_open") = nullptr
     , py::arg("flags") = 0
@@ -1187,7 +1255,8 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("log_text", [](const char * fmt)
     {
-        return ImGui::LogText(fmt);
+        ImGui::LogText(fmt);
+        return ;
     }
     , py::arg("fmt")
     , py::return_value_policy::automatic_reference);
