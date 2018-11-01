@@ -2,6 +2,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
+#include <limits>
 #include "imgui.h"
 #include "imgui_internal.h"
 namespace py = pybind11;
@@ -91,6 +92,20 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("items")
     , py::arg("height_in_items") = -1
     , py::return_value_policy::automatic_reference);
+
+    
+    deargui.def("plot_lines", [](const char* label, std::vector<float> values, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size)
+    {
+        ImGui::PlotLines(label, values.data(), values.size(), values_offset, overlay_text, scale_min, scale_max, graph_size, sizeof(float));
+    }
+    , py::arg("label")
+    , py::arg("values")
+    , py::arg("values_offset") = 0
+    , py::arg("overlay_text") = nullptr
+    , py::arg("scale_min") = std::numeric_limits<float>::max()
+    , py::arg("scale_max") = std::numeric_limits<float>::max()
+    , py::arg("graph_size") = ImVec2(0, 0)
+    );
 
 
     py::class_<ImVec2> Vec2(deargui, "Vec2");
@@ -1382,6 +1397,16 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("hide_text_after_double_hash") = false
     , py::arg("wrap_width") = -1.0f
     , py::return_value_policy::automatic_reference);
+    deargui.def("calc_list_clipping", [](int items_count, float items_height, int * out_items_display_start, int * out_items_display_end)
+    {
+        ImGui::CalcListClipping(items_count, items_height, out_items_display_start, out_items_display_end);
+        return std::make_tuple(out_items_display_start, out_items_display_end);
+    }
+    , py::arg("items_count")
+    , py::arg("items_height")
+    , py::arg("out_items_display_start")
+    , py::arg("out_items_display_end")
+    , py::return_value_policy::automatic_reference);
     deargui.def("begin_child_frame", &ImGui::BeginChildFrame
     , py::arg("id")
     , py::arg("size")
@@ -1394,6 +1419,30 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("color_convert_float4_to_u32", &ImGui::ColorConvertFloat4ToU32
     , py::arg("in")
+    , py::return_value_policy::automatic_reference);
+    deargui.def("color_convert_rg_bto_hsv", [](float r, float g, float b, float & out_h, float & out_s, float & out_v)
+    {
+        ImGui::ColorConvertRGBtoHSV(r, g, b, out_h, out_s, out_v);
+        return std::make_tuple(out_h, out_s, out_v);
+    }
+    , py::arg("r")
+    , py::arg("g")
+    , py::arg("b")
+    , py::arg("out_h") = 0
+    , py::arg("out_s") = 0
+    , py::arg("out_v") = 0
+    , py::return_value_policy::automatic_reference);
+    deargui.def("color_convert_hs_vto_rgb", [](float h, float s, float v, float & out_r, float & out_g, float & out_b)
+    {
+        ImGui::ColorConvertHSVtoRGB(h, s, v, out_r, out_g, out_b);
+        return std::make_tuple(out_r, out_g, out_b);
+    }
+    , py::arg("h")
+    , py::arg("s")
+    , py::arg("v")
+    , py::arg("out_r") = 0
+    , py::arg("out_g") = 0
+    , py::arg("out_b")
     , py::return_value_policy::automatic_reference);
     deargui.def("get_key_index", &ImGui::GetKeyIndex
     , py::arg("imgui_key")
@@ -1476,6 +1525,13 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("save_ini_settings_to_disk", &ImGui::SaveIniSettingsToDisk
     , py::arg("ini_filename")
+    , py::return_value_policy::automatic_reference);
+    deargui.def("save_ini_settings_to_memory", [](size_t * out_ini_size)
+    {
+        auto ret = ImGui::SaveIniSettingsToMemory(out_ini_size);
+        return std::make_tuple(ret, out_ini_size);
+    }
+    , py::arg("out_ini_size") = 0
     , py::return_value_policy::automatic_reference);
     py::enum_<ImGuiWindowFlags_>(deargui, "WindowFlags")
         .value("WINDOW_FLAGS_NONE", ImGuiWindowFlags_None)

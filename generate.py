@@ -8,6 +8,7 @@ HEADER = """
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
+#include <limits>
 #include "imgui.h"
 #include "imgui_internal.h"
 namespace py = pybind11;
@@ -97,6 +98,21 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("items")
     , py::arg("height_in_items") = -1
     , py::return_value_policy::automatic_reference);
+"""
+BROKEN = """
+
+    deargui.def("plot_lines", [](const char* label, std::vector<float> values, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size)
+    {
+        ImGui::PlotLines(label, values.data(), values.size(), values_offset, overlay_text, scale_min, scale_max, graph_size, sizeof(float));
+    }
+    , py::arg("label")
+    , py::arg("values")
+    , py::arg("values_offset") = 0
+    , py::arg("overlay_text") = nullptr
+    , py::arg("scale_min") = std::numeric_limits<float>::max()
+    , py::arg("scale_max") = std::numeric_limits<float>::max()
+    , py::arg("graph_size") = ImVec2(0, 0)
+    );
 
 """
 
@@ -169,24 +185,14 @@ FOOTER = """
 
 EXCLUDES = set(
 [
-    # Mutable Vector
-    "ImGuiTextFilter::Filters",
-
-    # Out Params
-    'ImFont::CalcTextSizeA',
-    'ImGui::CalcListClipping',
-    'ImGui::ColorConvertRGBtoHSV',
-    'ImGui::ColorConvertHSVtoRGB',
-    'ImGui::SaveIniSettingsToMemory',
-
     # Callbacks
     'ImGui::PlotLines',
-    "ImGui::PlotHistogram",
+    'ImGui::PlotHistogram',
     'ImGui::SetNextWindowSizeConstraints',
-    "ImGuiIO::GetClipboardTextFn",
-    "ImGuiIO::SetClipboardTextFn",
-    "ImGuiIO::ImeSetInputScreenPosFn",
-    "ImDrawCmd::UserCallback",
+    'ImGuiIO::GetClipboardTextFn',
+    'ImGuiIO::SetClipboardTextFn',
+    'ImGuiIO::ImeSetInputScreenPosFn',
+    'ImDrawCmd::UserCallback',
 
     # Wrapped
     'ImGui::Combo',
@@ -201,12 +207,8 @@ EXCLUDES = set(
     'ImFontAtlas::GetTexDataAsAlpha8',
     'ImFontAtlas::GetTexDataAsRGBA32',
 
-    # Deprecated
-    'ImColor',
-    'ImGuiIO::DisplayVisibleMin',
-    'ImGuiIO::DisplayVisibleMax',
-
     # Internal
+    'ImGuiTextFilter::Filters',
     'ImGuiStorage::Data',
     'ImFontAtlas::TexPixelsAlpha8',
     'ImFontAtlas::TexPixelsRGBA32',
@@ -223,17 +225,33 @@ EXCLUDES = set(
     'ImFontAtlas::GetCustomRectByIndex',
     'ImFontAtlas::CalcCustomRectUV',
     'ImFontAtlas::GetMouseCursorTexData',
+    'ImFont::CalcTextSizeA',
     'ImGui::SetAllocatorFunctions',
     'ImGui::MemAlloc',
     'ImGui::MemFree',
     'ImNewDummy',
     'ImGuiTextBuffer',
     'CustomRect',
+
+    # Deprecated
+    'ImColor',
+    'ImGuiIO::DisplayVisibleMin',
+    'ImGuiIO::DisplayVisibleMax',
 ])
 
 OVERLOADED = set([
-    "ImGui::IsPopupOpen",
+    'ImGui::IsPopupOpen',
 ])
+
+DEFAULTS = {
+    'out_h' : '0',
+    'out_s' : '0',
+    'out_v' : '0',
+    'out_r' : '0',
+    'out_g' : '0',
+    'out_g' : '0',
+    'out_ini_size' : '0',
+}
 
 def snakecase(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
@@ -368,6 +386,7 @@ def write_pyargs(arguments):
                 default = 'nullptr'
             elif not len(default):
                 default = default_from_tokens(child.get_tokens())
+        default = DEFAULTS.get(argument.spelling, default)
         if len(default):
             default = ' = ' + default
         out(', py::arg("{}"){}'.format(format_attribute(argument.spelling), default))
@@ -431,6 +450,8 @@ def should_return_argument(argument):
             cindex.TypeKind.INT,
             cindex.TypeKind.UINT,
             cindex.TypeKind.USHORT,
+            cindex.TypeKind.ULONG,
+            cindex.TypeKind.ULONGLONG,
         ]
         if not ptr.is_const_qualified() and ptr.kind in kinds:
             return True
@@ -521,9 +542,9 @@ if __name__ == '__main__':
     if sys.platform == 'darwin':
         cindex.Config.set_library_path('/usr/local/opt/llvm@6/lib')
     base = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(base, "imgui/imgui.h")
+    path = os.path.join(base, 'imgui/imgui.h')
     tu = cindex.Index.create().parse(path, args=['-std=c++17', '-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1'])
-    out.file = open(os.path.join(base, "deargui/deargui.cpp"), 'w')
+    out.file = open(os.path.join(base, 'deargui/deargui.cpp'), 'w')
     out.indent = 0
     out(HEADER)
     out.indent = 1
