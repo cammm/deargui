@@ -1,5 +1,6 @@
 
 #include <pybind11/pybind11.h>
+#include <pybind11/functional.h>
 #include <pybind11/stl.h>
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -46,35 +47,51 @@ PYBIND11_MODULE(deargui, deargui)
         int w, h;
         io.Fonts->GetTexDataAsAlpha8(&pixels, &w, &h, nullptr);
     });
-    deargui.def("get_display_size", []()
+    deargui.def("input_text", [](const char* label, char* data, size_t max_size, ImGuiInputTextFlags flags)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        return io.DisplaySize;
+        char text[max_size + 1];
+        strcpy(text, data);
+        auto ret = ImGui::InputText(label, text, max_size, flags, nullptr, NULL);
+        return std::make_tuple(ret, std::string(text));
     });
-    deargui.def("set_display_size", [](ImVec2 size)
+    deargui.def("input_text_multiline", [](const char* label, char* data, size_t max_size, const ImVec2& size, ImGuiInputTextFlags flags)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        io.DisplaySize = size;
-    }, py::arg("size"));
-    deargui.def("set_mouse_pos", [](ImVec2 pos)
+        char text[max_size + 1];
+        strcpy(text, data);
+        auto ret = ImGui::InputTextMultiline(label, text, max_size, size, flags, nullptr, NULL);
+        return std::make_tuple(ret, std::string(text));
+    });
+    deargui.def("combo", [](const char* label, int * current_item, std::vector<std::string> items, int popup_max_height_in_items)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        io.MousePos = pos;
-    }, py::arg("pos"));
-    deargui.def("set_mouse_down", [](int button, bool down)
+        std::vector<const char*> ptrs;
+        for (const std::string& s : items)
+        {
+            ptrs.push_back(s.c_str());
+        }
+        auto ret = ImGui::Combo(label, current_item, ptrs.data(), ptrs.size(), popup_max_height_in_items);
+        return std::make_tuple(ret, current_item);
+    }
+    , py::arg("label")
+    , py::arg("current_item")
+    , py::arg("items")
+    , py::arg("popup_max_height_in_items") = -1
+    , py::return_value_policy::automatic_reference);
+    deargui.def("list_box", [](const char* label, int * current_item, std::vector<std::string> items, int height_in_items)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        if (button < 0) throw py::index_error();
-        if (button >= IM_ARRAYSIZE(io.MouseDown)) throw py::index_error();
-        io.MouseDown[button] = down;
-    }, py::arg("button"), py::arg("down"));
-    deargui.def("set_key_down", [](int key, bool down)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        if (key < 0) throw py::index_error();
-        if (key >= IM_ARRAYSIZE(io.KeysDown)) throw py::index_error();
-        io.KeysDown[key] = down;
-    }, py::arg("key"), py::arg("down"));
+        std::vector<const char*> ptrs;
+        for (const std::string& s : items)
+        {
+            ptrs.push_back(s.c_str());
+        }
+        auto ret = ImGui::ListBox(label, current_item, ptrs.data(), ptrs.size(), height_in_items);
+        return std::make_tuple(ret, current_item);
+    }
+    , py::arg("label")
+    , py::arg("current_item")
+    , py::arg("items")
+    , py::arg("height_in_items") = -1
+    , py::return_value_policy::automatic_reference);
+
 
     py::class_<ImVec2> Vec2(deargui, "Vec2");
     Vec2.def_readwrite("x", &ImVec2::x);
@@ -116,9 +133,9 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("sz_drawvert")
     , py::return_value_policy::automatic_reference);
     deargui.def("get_io", &ImGui::GetIO
-    , py::return_value_policy::automatic_reference);
+    , py::return_value_policy::reference);
     deargui.def("get_style", &ImGui::GetStyle
-    , py::return_value_policy::automatic_reference);
+    , py::return_value_policy::reference);
     deargui.def("new_frame", &ImGui::NewFrame
     , py::return_value_policy::automatic_reference);
     deargui.def("end_frame", &ImGui::EndFrame
@@ -326,7 +343,7 @@ PYBIND11_MODULE(deargui, deargui)
     , py::return_value_policy::automatic_reference);
     deargui.def("get_style_color_vec4", &ImGui::GetStyleColorVec4
     , py::arg("idx")
-    , py::return_value_policy::automatic_reference);
+    , py::return_value_policy::reference);
     deargui.def("get_font", &ImGui::GetFont
     , py::return_value_policy::automatic_reference);
     deargui.def("get_font_size", &ImGui::GetFontSize
@@ -1461,128 +1478,128 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("ini_filename")
     , py::return_value_policy::automatic_reference);
     py::enum_<ImGuiWindowFlags_>(deargui, "WindowFlags")
-        .value("WINDOW_FLAGS__NONE", ImGuiWindowFlags_None)
-        .value("WINDOW_FLAGS__NO_TITLE_BAR", ImGuiWindowFlags_NoTitleBar)
-        .value("WINDOW_FLAGS__NO_RESIZE", ImGuiWindowFlags_NoResize)
-        .value("WINDOW_FLAGS__NO_MOVE", ImGuiWindowFlags_NoMove)
-        .value("WINDOW_FLAGS__NO_SCROLLBAR", ImGuiWindowFlags_NoScrollbar)
-        .value("WINDOW_FLAGS__NO_SCROLL_WITH_MOUSE", ImGuiWindowFlags_NoScrollWithMouse)
-        .value("WINDOW_FLAGS__NO_COLLAPSE", ImGuiWindowFlags_NoCollapse)
-        .value("WINDOW_FLAGS__ALWAYS_AUTO_RESIZE", ImGuiWindowFlags_AlwaysAutoResize)
-        .value("WINDOW_FLAGS__NO_SAVED_SETTINGS", ImGuiWindowFlags_NoSavedSettings)
-        .value("WINDOW_FLAGS__NO_INPUTS", ImGuiWindowFlags_NoInputs)
-        .value("WINDOW_FLAGS__MENU_BAR", ImGuiWindowFlags_MenuBar)
-        .value("WINDOW_FLAGS__HORIZONTAL_SCROLLBAR", ImGuiWindowFlags_HorizontalScrollbar)
-        .value("WINDOW_FLAGS__NO_FOCUS_ON_APPEARING", ImGuiWindowFlags_NoFocusOnAppearing)
-        .value("WINDOW_FLAGS__NO_BRING_TO_FRONT_ON_FOCUS", ImGuiWindowFlags_NoBringToFrontOnFocus)
-        .value("WINDOW_FLAGS__ALWAYS_VERTICAL_SCROLLBAR", ImGuiWindowFlags_AlwaysVerticalScrollbar)
-        .value("WINDOW_FLAGS__ALWAYS_HORIZONTAL_SCROLLBAR", ImGuiWindowFlags_AlwaysHorizontalScrollbar)
-        .value("WINDOW_FLAGS__ALWAYS_USE_WINDOW_PADDING", ImGuiWindowFlags_AlwaysUseWindowPadding)
-        .value("WINDOW_FLAGS__NO_NAV_INPUTS", ImGuiWindowFlags_NoNavInputs)
-        .value("WINDOW_FLAGS__NO_NAV_FOCUS", ImGuiWindowFlags_NoNavFocus)
-        .value("WINDOW_FLAGS__NO_NAV", ImGuiWindowFlags_NoNav)
-        .value("WINDOW_FLAGS__NAV_FLATTENED", ImGuiWindowFlags_NavFlattened)
-        .value("WINDOW_FLAGS__CHILD_WINDOW", ImGuiWindowFlags_ChildWindow)
-        .value("WINDOW_FLAGS__TOOLTIP", ImGuiWindowFlags_Tooltip)
-        .value("WINDOW_FLAGS__POPUP", ImGuiWindowFlags_Popup)
-        .value("WINDOW_FLAGS__MODAL", ImGuiWindowFlags_Modal)
-        .value("WINDOW_FLAGS__CHILD_MENU", ImGuiWindowFlags_ChildMenu)
+        .value("WINDOW_FLAGS_NONE", ImGuiWindowFlags_None)
+        .value("WINDOW_FLAGS_NO_TITLE_BAR", ImGuiWindowFlags_NoTitleBar)
+        .value("WINDOW_FLAGS_NO_RESIZE", ImGuiWindowFlags_NoResize)
+        .value("WINDOW_FLAGS_NO_MOVE", ImGuiWindowFlags_NoMove)
+        .value("WINDOW_FLAGS_NO_SCROLLBAR", ImGuiWindowFlags_NoScrollbar)
+        .value("WINDOW_FLAGS_NO_SCROLL_WITH_MOUSE", ImGuiWindowFlags_NoScrollWithMouse)
+        .value("WINDOW_FLAGS_NO_COLLAPSE", ImGuiWindowFlags_NoCollapse)
+        .value("WINDOW_FLAGS_ALWAYS_AUTO_RESIZE", ImGuiWindowFlags_AlwaysAutoResize)
+        .value("WINDOW_FLAGS_NO_SAVED_SETTINGS", ImGuiWindowFlags_NoSavedSettings)
+        .value("WINDOW_FLAGS_NO_INPUTS", ImGuiWindowFlags_NoInputs)
+        .value("WINDOW_FLAGS_MENU_BAR", ImGuiWindowFlags_MenuBar)
+        .value("WINDOW_FLAGS_HORIZONTAL_SCROLLBAR", ImGuiWindowFlags_HorizontalScrollbar)
+        .value("WINDOW_FLAGS_NO_FOCUS_ON_APPEARING", ImGuiWindowFlags_NoFocusOnAppearing)
+        .value("WINDOW_FLAGS_NO_BRING_TO_FRONT_ON_FOCUS", ImGuiWindowFlags_NoBringToFrontOnFocus)
+        .value("WINDOW_FLAGS_ALWAYS_VERTICAL_SCROLLBAR", ImGuiWindowFlags_AlwaysVerticalScrollbar)
+        .value("WINDOW_FLAGS_ALWAYS_HORIZONTAL_SCROLLBAR", ImGuiWindowFlags_AlwaysHorizontalScrollbar)
+        .value("WINDOW_FLAGS_ALWAYS_USE_WINDOW_PADDING", ImGuiWindowFlags_AlwaysUseWindowPadding)
+        .value("WINDOW_FLAGS_NO_NAV_INPUTS", ImGuiWindowFlags_NoNavInputs)
+        .value("WINDOW_FLAGS_NO_NAV_FOCUS", ImGuiWindowFlags_NoNavFocus)
+        .value("WINDOW_FLAGS_NO_NAV", ImGuiWindowFlags_NoNav)
+        .value("WINDOW_FLAGS_NAV_FLATTENED", ImGuiWindowFlags_NavFlattened)
+        .value("WINDOW_FLAGS_CHILD_WINDOW", ImGuiWindowFlags_ChildWindow)
+        .value("WINDOW_FLAGS_TOOLTIP", ImGuiWindowFlags_Tooltip)
+        .value("WINDOW_FLAGS_POPUP", ImGuiWindowFlags_Popup)
+        .value("WINDOW_FLAGS_MODAL", ImGuiWindowFlags_Modal)
+        .value("WINDOW_FLAGS_CHILD_MENU", ImGuiWindowFlags_ChildMenu)
         .export_values();
 
     py::enum_<ImGuiInputTextFlags_>(deargui, "InputTextFlags")
-        .value("INPUT_TEXT_FLAGS__NONE", ImGuiInputTextFlags_None)
-        .value("INPUT_TEXT_FLAGS__CHARS_DECIMAL", ImGuiInputTextFlags_CharsDecimal)
-        .value("INPUT_TEXT_FLAGS__CHARS_HEXADECIMAL", ImGuiInputTextFlags_CharsHexadecimal)
-        .value("INPUT_TEXT_FLAGS__CHARS_UPPERCASE", ImGuiInputTextFlags_CharsUppercase)
-        .value("INPUT_TEXT_FLAGS__CHARS_NO_BLANK", ImGuiInputTextFlags_CharsNoBlank)
-        .value("INPUT_TEXT_FLAGS__AUTO_SELECT_ALL", ImGuiInputTextFlags_AutoSelectAll)
-        .value("INPUT_TEXT_FLAGS__ENTER_RETURNS_TRUE", ImGuiInputTextFlags_EnterReturnsTrue)
-        .value("INPUT_TEXT_FLAGS__CALLBACK_COMPLETION", ImGuiInputTextFlags_CallbackCompletion)
-        .value("INPUT_TEXT_FLAGS__CALLBACK_HISTORY", ImGuiInputTextFlags_CallbackHistory)
-        .value("INPUT_TEXT_FLAGS__CALLBACK_ALWAYS", ImGuiInputTextFlags_CallbackAlways)
-        .value("INPUT_TEXT_FLAGS__CALLBACK_CHAR_FILTER", ImGuiInputTextFlags_CallbackCharFilter)
-        .value("INPUT_TEXT_FLAGS__ALLOW_TAB_INPUT", ImGuiInputTextFlags_AllowTabInput)
-        .value("INPUT_TEXT_FLAGS__CTRL_ENTER_FOR_NEW_LINE", ImGuiInputTextFlags_CtrlEnterForNewLine)
-        .value("INPUT_TEXT_FLAGS__NO_HORIZONTAL_SCROLL", ImGuiInputTextFlags_NoHorizontalScroll)
-        .value("INPUT_TEXT_FLAGS__ALWAYS_INSERT_MODE", ImGuiInputTextFlags_AlwaysInsertMode)
-        .value("INPUT_TEXT_FLAGS__READ_ONLY", ImGuiInputTextFlags_ReadOnly)
-        .value("INPUT_TEXT_FLAGS__PASSWORD", ImGuiInputTextFlags_Password)
-        .value("INPUT_TEXT_FLAGS__NO_UNDO_REDO", ImGuiInputTextFlags_NoUndoRedo)
-        .value("INPUT_TEXT_FLAGS__CHARS_SCIENTIFIC", ImGuiInputTextFlags_CharsScientific)
-        .value("INPUT_TEXT_FLAGS__CALLBACK_RESIZE", ImGuiInputTextFlags_CallbackResize)
-        .value("INPUT_TEXT_FLAGS__MULTILINE", ImGuiInputTextFlags_Multiline)
+        .value("INPUT_TEXT_FLAGS_NONE", ImGuiInputTextFlags_None)
+        .value("INPUT_TEXT_FLAGS_CHARS_DECIMAL", ImGuiInputTextFlags_CharsDecimal)
+        .value("INPUT_TEXT_FLAGS_CHARS_HEXADECIMAL", ImGuiInputTextFlags_CharsHexadecimal)
+        .value("INPUT_TEXT_FLAGS_CHARS_UPPERCASE", ImGuiInputTextFlags_CharsUppercase)
+        .value("INPUT_TEXT_FLAGS_CHARS_NO_BLANK", ImGuiInputTextFlags_CharsNoBlank)
+        .value("INPUT_TEXT_FLAGS_AUTO_SELECT_ALL", ImGuiInputTextFlags_AutoSelectAll)
+        .value("INPUT_TEXT_FLAGS_ENTER_RETURNS_TRUE", ImGuiInputTextFlags_EnterReturnsTrue)
+        .value("INPUT_TEXT_FLAGS_CALLBACK_COMPLETION", ImGuiInputTextFlags_CallbackCompletion)
+        .value("INPUT_TEXT_FLAGS_CALLBACK_HISTORY", ImGuiInputTextFlags_CallbackHistory)
+        .value("INPUT_TEXT_FLAGS_CALLBACK_ALWAYS", ImGuiInputTextFlags_CallbackAlways)
+        .value("INPUT_TEXT_FLAGS_CALLBACK_CHAR_FILTER", ImGuiInputTextFlags_CallbackCharFilter)
+        .value("INPUT_TEXT_FLAGS_ALLOW_TAB_INPUT", ImGuiInputTextFlags_AllowTabInput)
+        .value("INPUT_TEXT_FLAGS_CTRL_ENTER_FOR_NEW_LINE", ImGuiInputTextFlags_CtrlEnterForNewLine)
+        .value("INPUT_TEXT_FLAGS_NO_HORIZONTAL_SCROLL", ImGuiInputTextFlags_NoHorizontalScroll)
+        .value("INPUT_TEXT_FLAGS_ALWAYS_INSERT_MODE", ImGuiInputTextFlags_AlwaysInsertMode)
+        .value("INPUT_TEXT_FLAGS_READ_ONLY", ImGuiInputTextFlags_ReadOnly)
+        .value("INPUT_TEXT_FLAGS_PASSWORD", ImGuiInputTextFlags_Password)
+        .value("INPUT_TEXT_FLAGS_NO_UNDO_REDO", ImGuiInputTextFlags_NoUndoRedo)
+        .value("INPUT_TEXT_FLAGS_CHARS_SCIENTIFIC", ImGuiInputTextFlags_CharsScientific)
+        .value("INPUT_TEXT_FLAGS_CALLBACK_RESIZE", ImGuiInputTextFlags_CallbackResize)
+        .value("INPUT_TEXT_FLAGS_MULTILINE", ImGuiInputTextFlags_Multiline)
         .export_values();
 
     py::enum_<ImGuiTreeNodeFlags_>(deargui, "TreeNodeFlags")
-        .value("TREE_NODE_FLAGS__NONE", ImGuiTreeNodeFlags_None)
-        .value("TREE_NODE_FLAGS__SELECTED", ImGuiTreeNodeFlags_Selected)
-        .value("TREE_NODE_FLAGS__FRAMED", ImGuiTreeNodeFlags_Framed)
-        .value("TREE_NODE_FLAGS__ALLOW_ITEM_OVERLAP", ImGuiTreeNodeFlags_AllowItemOverlap)
-        .value("TREE_NODE_FLAGS__NO_TREE_PUSH_ON_OPEN", ImGuiTreeNodeFlags_NoTreePushOnOpen)
-        .value("TREE_NODE_FLAGS__NO_AUTO_OPEN_ON_LOG", ImGuiTreeNodeFlags_NoAutoOpenOnLog)
-        .value("TREE_NODE_FLAGS__DEFAULT_OPEN", ImGuiTreeNodeFlags_DefaultOpen)
-        .value("TREE_NODE_FLAGS__OPEN_ON_DOUBLE_CLICK", ImGuiTreeNodeFlags_OpenOnDoubleClick)
-        .value("TREE_NODE_FLAGS__OPEN_ON_ARROW", ImGuiTreeNodeFlags_OpenOnArrow)
-        .value("TREE_NODE_FLAGS__LEAF", ImGuiTreeNodeFlags_Leaf)
-        .value("TREE_NODE_FLAGS__BULLET", ImGuiTreeNodeFlags_Bullet)
-        .value("TREE_NODE_FLAGS__FRAME_PADDING", ImGuiTreeNodeFlags_FramePadding)
-        .value("TREE_NODE_FLAGS__NAV_LEFT_JUMPS_BACK_HERE", ImGuiTreeNodeFlags_NavLeftJumpsBackHere)
-        .value("TREE_NODE_FLAGS__COLLAPSING_HEADER", ImGuiTreeNodeFlags_CollapsingHeader)
+        .value("TREE_NODE_FLAGS_NONE", ImGuiTreeNodeFlags_None)
+        .value("TREE_NODE_FLAGS_SELECTED", ImGuiTreeNodeFlags_Selected)
+        .value("TREE_NODE_FLAGS_FRAMED", ImGuiTreeNodeFlags_Framed)
+        .value("TREE_NODE_FLAGS_ALLOW_ITEM_OVERLAP", ImGuiTreeNodeFlags_AllowItemOverlap)
+        .value("TREE_NODE_FLAGS_NO_TREE_PUSH_ON_OPEN", ImGuiTreeNodeFlags_NoTreePushOnOpen)
+        .value("TREE_NODE_FLAGS_NO_AUTO_OPEN_ON_LOG", ImGuiTreeNodeFlags_NoAutoOpenOnLog)
+        .value("TREE_NODE_FLAGS_DEFAULT_OPEN", ImGuiTreeNodeFlags_DefaultOpen)
+        .value("TREE_NODE_FLAGS_OPEN_ON_DOUBLE_CLICK", ImGuiTreeNodeFlags_OpenOnDoubleClick)
+        .value("TREE_NODE_FLAGS_OPEN_ON_ARROW", ImGuiTreeNodeFlags_OpenOnArrow)
+        .value("TREE_NODE_FLAGS_LEAF", ImGuiTreeNodeFlags_Leaf)
+        .value("TREE_NODE_FLAGS_BULLET", ImGuiTreeNodeFlags_Bullet)
+        .value("TREE_NODE_FLAGS_FRAME_PADDING", ImGuiTreeNodeFlags_FramePadding)
+        .value("TREE_NODE_FLAGS_NAV_LEFT_JUMPS_BACK_HERE", ImGuiTreeNodeFlags_NavLeftJumpsBackHere)
+        .value("TREE_NODE_FLAGS_COLLAPSING_HEADER", ImGuiTreeNodeFlags_CollapsingHeader)
         .export_values();
 
     py::enum_<ImGuiSelectableFlags_>(deargui, "SelectableFlags")
-        .value("SELECTABLE_FLAGS__NONE", ImGuiSelectableFlags_None)
-        .value("SELECTABLE_FLAGS__DONT_CLOSE_POPUPS", ImGuiSelectableFlags_DontClosePopups)
-        .value("SELECTABLE_FLAGS__SPAN_ALL_COLUMNS", ImGuiSelectableFlags_SpanAllColumns)
-        .value("SELECTABLE_FLAGS__ALLOW_DOUBLE_CLICK", ImGuiSelectableFlags_AllowDoubleClick)
-        .value("SELECTABLE_FLAGS__DISABLED", ImGuiSelectableFlags_Disabled)
+        .value("SELECTABLE_FLAGS_NONE", ImGuiSelectableFlags_None)
+        .value("SELECTABLE_FLAGS_DONT_CLOSE_POPUPS", ImGuiSelectableFlags_DontClosePopups)
+        .value("SELECTABLE_FLAGS_SPAN_ALL_COLUMNS", ImGuiSelectableFlags_SpanAllColumns)
+        .value("SELECTABLE_FLAGS_ALLOW_DOUBLE_CLICK", ImGuiSelectableFlags_AllowDoubleClick)
+        .value("SELECTABLE_FLAGS_DISABLED", ImGuiSelectableFlags_Disabled)
         .export_values();
 
     py::enum_<ImGuiComboFlags_>(deargui, "ComboFlags")
-        .value("COMBO_FLAGS__NONE", ImGuiComboFlags_None)
-        .value("COMBO_FLAGS__POPUP_ALIGN_LEFT", ImGuiComboFlags_PopupAlignLeft)
-        .value("COMBO_FLAGS__HEIGHT_SMALL", ImGuiComboFlags_HeightSmall)
-        .value("COMBO_FLAGS__HEIGHT_REGULAR", ImGuiComboFlags_HeightRegular)
-        .value("COMBO_FLAGS__HEIGHT_LARGE", ImGuiComboFlags_HeightLarge)
-        .value("COMBO_FLAGS__HEIGHT_LARGEST", ImGuiComboFlags_HeightLargest)
-        .value("COMBO_FLAGS__NO_ARROW_BUTTON", ImGuiComboFlags_NoArrowButton)
-        .value("COMBO_FLAGS__NO_PREVIEW", ImGuiComboFlags_NoPreview)
-        .value("COMBO_FLAGS__HEIGHT_MASK", ImGuiComboFlags_HeightMask_)
+        .value("COMBO_FLAGS_NONE", ImGuiComboFlags_None)
+        .value("COMBO_FLAGS_POPUP_ALIGN_LEFT", ImGuiComboFlags_PopupAlignLeft)
+        .value("COMBO_FLAGS_HEIGHT_SMALL", ImGuiComboFlags_HeightSmall)
+        .value("COMBO_FLAGS_HEIGHT_REGULAR", ImGuiComboFlags_HeightRegular)
+        .value("COMBO_FLAGS_HEIGHT_LARGE", ImGuiComboFlags_HeightLarge)
+        .value("COMBO_FLAGS_HEIGHT_LARGEST", ImGuiComboFlags_HeightLargest)
+        .value("COMBO_FLAGS_NO_ARROW_BUTTON", ImGuiComboFlags_NoArrowButton)
+        .value("COMBO_FLAGS_NO_PREVIEW", ImGuiComboFlags_NoPreview)
+        .value("COMBO_FLAGS_HEIGHT_MASK", ImGuiComboFlags_HeightMask_)
         .export_values();
 
     py::enum_<ImGuiFocusedFlags_>(deargui, "FocusedFlags")
-        .value("FOCUSED_FLAGS__NONE", ImGuiFocusedFlags_None)
-        .value("FOCUSED_FLAGS__CHILD_WINDOWS", ImGuiFocusedFlags_ChildWindows)
-        .value("FOCUSED_FLAGS__ROOT_WINDOW", ImGuiFocusedFlags_RootWindow)
-        .value("FOCUSED_FLAGS__ANY_WINDOW", ImGuiFocusedFlags_AnyWindow)
-        .value("FOCUSED_FLAGS__ROOT_AND_CHILD_WINDOWS", ImGuiFocusedFlags_RootAndChildWindows)
+        .value("FOCUSED_FLAGS_NONE", ImGuiFocusedFlags_None)
+        .value("FOCUSED_FLAGS_CHILD_WINDOWS", ImGuiFocusedFlags_ChildWindows)
+        .value("FOCUSED_FLAGS_ROOT_WINDOW", ImGuiFocusedFlags_RootWindow)
+        .value("FOCUSED_FLAGS_ANY_WINDOW", ImGuiFocusedFlags_AnyWindow)
+        .value("FOCUSED_FLAGS_ROOT_AND_CHILD_WINDOWS", ImGuiFocusedFlags_RootAndChildWindows)
         .export_values();
 
     py::enum_<ImGuiHoveredFlags_>(deargui, "HoveredFlags")
-        .value("HOVERED_FLAGS__NONE", ImGuiHoveredFlags_None)
-        .value("HOVERED_FLAGS__CHILD_WINDOWS", ImGuiHoveredFlags_ChildWindows)
-        .value("HOVERED_FLAGS__ROOT_WINDOW", ImGuiHoveredFlags_RootWindow)
-        .value("HOVERED_FLAGS__ANY_WINDOW", ImGuiHoveredFlags_AnyWindow)
-        .value("HOVERED_FLAGS__ALLOW_WHEN_BLOCKED_BY_POPUP", ImGuiHoveredFlags_AllowWhenBlockedByPopup)
-        .value("HOVERED_FLAGS__ALLOW_WHEN_BLOCKED_BY_ACTIVE_ITEM", ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)
-        .value("HOVERED_FLAGS__ALLOW_WHEN_OVERLAPPED", ImGuiHoveredFlags_AllowWhenOverlapped)
-        .value("HOVERED_FLAGS__ALLOW_WHEN_DISABLED", ImGuiHoveredFlags_AllowWhenDisabled)
-        .value("HOVERED_FLAGS__RECT_ONLY", ImGuiHoveredFlags_RectOnly)
-        .value("HOVERED_FLAGS__ROOT_AND_CHILD_WINDOWS", ImGuiHoveredFlags_RootAndChildWindows)
+        .value("HOVERED_FLAGS_NONE", ImGuiHoveredFlags_None)
+        .value("HOVERED_FLAGS_CHILD_WINDOWS", ImGuiHoveredFlags_ChildWindows)
+        .value("HOVERED_FLAGS_ROOT_WINDOW", ImGuiHoveredFlags_RootWindow)
+        .value("HOVERED_FLAGS_ANY_WINDOW", ImGuiHoveredFlags_AnyWindow)
+        .value("HOVERED_FLAGS_ALLOW_WHEN_BLOCKED_BY_POPUP", ImGuiHoveredFlags_AllowWhenBlockedByPopup)
+        .value("HOVERED_FLAGS_ALLOW_WHEN_BLOCKED_BY_ACTIVE_ITEM", ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)
+        .value("HOVERED_FLAGS_ALLOW_WHEN_OVERLAPPED", ImGuiHoveredFlags_AllowWhenOverlapped)
+        .value("HOVERED_FLAGS_ALLOW_WHEN_DISABLED", ImGuiHoveredFlags_AllowWhenDisabled)
+        .value("HOVERED_FLAGS_RECT_ONLY", ImGuiHoveredFlags_RectOnly)
+        .value("HOVERED_FLAGS_ROOT_AND_CHILD_WINDOWS", ImGuiHoveredFlags_RootAndChildWindows)
         .export_values();
 
     py::enum_<ImGuiDragDropFlags_>(deargui, "DragDropFlags")
-        .value("DRAG_DROP_FLAGS__NONE", ImGuiDragDropFlags_None)
-        .value("DRAG_DROP_FLAGS__SOURCE_NO_PREVIEW_TOOLTIP", ImGuiDragDropFlags_SourceNoPreviewTooltip)
-        .value("DRAG_DROP_FLAGS__SOURCE_NO_DISABLE_HOVER", ImGuiDragDropFlags_SourceNoDisableHover)
-        .value("DRAG_DROP_FLAGS__SOURCE_NO_HOLD_TO_OPEN_OTHERS", ImGuiDragDropFlags_SourceNoHoldToOpenOthers)
-        .value("DRAG_DROP_FLAGS__SOURCE_ALLOW_NULL_ID", ImGuiDragDropFlags_SourceAllowNullID)
-        .value("DRAG_DROP_FLAGS__SOURCE_EXTERN", ImGuiDragDropFlags_SourceExtern)
-        .value("DRAG_DROP_FLAGS__SOURCE_AUTO_EXPIRE_PAYLOAD", ImGuiDragDropFlags_SourceAutoExpirePayload)
-        .value("DRAG_DROP_FLAGS__ACCEPT_BEFORE_DELIVERY", ImGuiDragDropFlags_AcceptBeforeDelivery)
-        .value("DRAG_DROP_FLAGS__ACCEPT_NO_DRAW_DEFAULT_RECT", ImGuiDragDropFlags_AcceptNoDrawDefaultRect)
-        .value("DRAG_DROP_FLAGS__ACCEPT_NO_PREVIEW_TOOLTIP", ImGuiDragDropFlags_AcceptNoPreviewTooltip)
-        .value("DRAG_DROP_FLAGS__ACCEPT_PEEK_ONLY", ImGuiDragDropFlags_AcceptPeekOnly)
+        .value("DRAG_DROP_FLAGS_NONE", ImGuiDragDropFlags_None)
+        .value("DRAG_DROP_FLAGS_SOURCE_NO_PREVIEW_TOOLTIP", ImGuiDragDropFlags_SourceNoPreviewTooltip)
+        .value("DRAG_DROP_FLAGS_SOURCE_NO_DISABLE_HOVER", ImGuiDragDropFlags_SourceNoDisableHover)
+        .value("DRAG_DROP_FLAGS_SOURCE_NO_HOLD_TO_OPEN_OTHERS", ImGuiDragDropFlags_SourceNoHoldToOpenOthers)
+        .value("DRAG_DROP_FLAGS_SOURCE_ALLOW_NULL_ID", ImGuiDragDropFlags_SourceAllowNullID)
+        .value("DRAG_DROP_FLAGS_SOURCE_EXTERN", ImGuiDragDropFlags_SourceExtern)
+        .value("DRAG_DROP_FLAGS_SOURCE_AUTO_EXPIRE_PAYLOAD", ImGuiDragDropFlags_SourceAutoExpirePayload)
+        .value("DRAG_DROP_FLAGS_ACCEPT_BEFORE_DELIVERY", ImGuiDragDropFlags_AcceptBeforeDelivery)
+        .value("DRAG_DROP_FLAGS_ACCEPT_NO_DRAW_DEFAULT_RECT", ImGuiDragDropFlags_AcceptNoDrawDefaultRect)
+        .value("DRAG_DROP_FLAGS_ACCEPT_NO_PREVIEW_TOOLTIP", ImGuiDragDropFlags_AcceptNoPreviewTooltip)
+        .value("DRAG_DROP_FLAGS_ACCEPT_PEEK_ONLY", ImGuiDragDropFlags_AcceptPeekOnly)
         .export_values();
 
     py::enum_<ImGuiDataType_>(deargui, "DataType")
@@ -1590,36 +1607,36 @@ PYBIND11_MODULE(deargui, deargui)
         .value("DATA_TYPE_U32", ImGuiDataType_U32)
         .value("DATA_TYPE_S64", ImGuiDataType_S64)
         .value("DATA_TYPE_U64", ImGuiDataType_U64)
-        .value("DATA_TYPE__FLOAT", ImGuiDataType_Float)
-        .value("DATA_TYPE__DOUBLE", ImGuiDataType_Double)
+        .value("DATA_TYPE_FLOAT", ImGuiDataType_Float)
+        .value("DATA_TYPE_DOUBLE", ImGuiDataType_Double)
         .value("DATA_TYPE_COUNT", ImGuiDataType_COUNT)
         .export_values();
 
     py::enum_<ImGuiDir_>(deargui, "Dir")
-        .value("DIR__NONE", ImGuiDir_None)
-        .value("DIR__LEFT", ImGuiDir_Left)
-        .value("DIR__RIGHT", ImGuiDir_Right)
-        .value("DIR__UP", ImGuiDir_Up)
-        .value("DIR__DOWN", ImGuiDir_Down)
+        .value("DIR_NONE", ImGuiDir_None)
+        .value("DIR_LEFT", ImGuiDir_Left)
+        .value("DIR_RIGHT", ImGuiDir_Right)
+        .value("DIR_UP", ImGuiDir_Up)
+        .value("DIR_DOWN", ImGuiDir_Down)
         .value("DIR_COUNT", ImGuiDir_COUNT)
         .export_values();
 
     py::enum_<ImGuiKey_>(deargui, "Key")
-        .value("KEY__TAB", ImGuiKey_Tab)
-        .value("KEY__LEFT_ARROW", ImGuiKey_LeftArrow)
-        .value("KEY__RIGHT_ARROW", ImGuiKey_RightArrow)
-        .value("KEY__UP_ARROW", ImGuiKey_UpArrow)
-        .value("KEY__DOWN_ARROW", ImGuiKey_DownArrow)
-        .value("KEY__PAGE_UP", ImGuiKey_PageUp)
-        .value("KEY__PAGE_DOWN", ImGuiKey_PageDown)
-        .value("KEY__HOME", ImGuiKey_Home)
-        .value("KEY__END", ImGuiKey_End)
-        .value("KEY__INSERT", ImGuiKey_Insert)
-        .value("KEY__DELETE", ImGuiKey_Delete)
-        .value("KEY__BACKSPACE", ImGuiKey_Backspace)
-        .value("KEY__SPACE", ImGuiKey_Space)
-        .value("KEY__ENTER", ImGuiKey_Enter)
-        .value("KEY__ESCAPE", ImGuiKey_Escape)
+        .value("KEY_TAB", ImGuiKey_Tab)
+        .value("KEY_LEFT_ARROW", ImGuiKey_LeftArrow)
+        .value("KEY_RIGHT_ARROW", ImGuiKey_RightArrow)
+        .value("KEY_UP_ARROW", ImGuiKey_UpArrow)
+        .value("KEY_DOWN_ARROW", ImGuiKey_DownArrow)
+        .value("KEY_PAGE_UP", ImGuiKey_PageUp)
+        .value("KEY_PAGE_DOWN", ImGuiKey_PageDown)
+        .value("KEY_HOME", ImGuiKey_Home)
+        .value("KEY_END", ImGuiKey_End)
+        .value("KEY_INSERT", ImGuiKey_Insert)
+        .value("KEY_DELETE", ImGuiKey_Delete)
+        .value("KEY_BACKSPACE", ImGuiKey_Backspace)
+        .value("KEY_SPACE", ImGuiKey_Space)
+        .value("KEY_ENTER", ImGuiKey_Enter)
+        .value("KEY_ESCAPE", ImGuiKey_Escape)
         .value("KEY_A", ImGuiKey_A)
         .value("KEY_C", ImGuiKey_C)
         .value("KEY_V", ImGuiKey_V)
@@ -1630,166 +1647,166 @@ PYBIND11_MODULE(deargui, deargui)
         .export_values();
 
     py::enum_<ImGuiNavInput_>(deargui, "NavInput")
-        .value("NAV_INPUT__ACTIVATE", ImGuiNavInput_Activate)
-        .value("NAV_INPUT__CANCEL", ImGuiNavInput_Cancel)
-        .value("NAV_INPUT__INPUT", ImGuiNavInput_Input)
-        .value("NAV_INPUT__MENU", ImGuiNavInput_Menu)
-        .value("NAV_INPUT__DPAD_LEFT", ImGuiNavInput_DpadLeft)
-        .value("NAV_INPUT__DPAD_RIGHT", ImGuiNavInput_DpadRight)
-        .value("NAV_INPUT__DPAD_UP", ImGuiNavInput_DpadUp)
-        .value("NAV_INPUT__DPAD_DOWN", ImGuiNavInput_DpadDown)
+        .value("NAV_INPUT_ACTIVATE", ImGuiNavInput_Activate)
+        .value("NAV_INPUT_CANCEL", ImGuiNavInput_Cancel)
+        .value("NAV_INPUT_INPUT", ImGuiNavInput_Input)
+        .value("NAV_INPUT_MENU", ImGuiNavInput_Menu)
+        .value("NAV_INPUT_DPAD_LEFT", ImGuiNavInput_DpadLeft)
+        .value("NAV_INPUT_DPAD_RIGHT", ImGuiNavInput_DpadRight)
+        .value("NAV_INPUT_DPAD_UP", ImGuiNavInput_DpadUp)
+        .value("NAV_INPUT_DPAD_DOWN", ImGuiNavInput_DpadDown)
         .value("NAV_INPUT_L_STICK_LEFT", ImGuiNavInput_LStickLeft)
         .value("NAV_INPUT_L_STICK_RIGHT", ImGuiNavInput_LStickRight)
         .value("NAV_INPUT_L_STICK_UP", ImGuiNavInput_LStickUp)
         .value("NAV_INPUT_L_STICK_DOWN", ImGuiNavInput_LStickDown)
-        .value("NAV_INPUT__FOCUS_PREV", ImGuiNavInput_FocusPrev)
-        .value("NAV_INPUT__FOCUS_NEXT", ImGuiNavInput_FocusNext)
-        .value("NAV_INPUT__TWEAK_SLOW", ImGuiNavInput_TweakSlow)
-        .value("NAV_INPUT__TWEAK_FAST", ImGuiNavInput_TweakFast)
-        .value("NAV_INPUT__KEY_MENU", ImGuiNavInput_KeyMenu_)
-        .value("NAV_INPUT__KEY_LEFT", ImGuiNavInput_KeyLeft_)
-        .value("NAV_INPUT__KEY_RIGHT", ImGuiNavInput_KeyRight_)
-        .value("NAV_INPUT__KEY_UP", ImGuiNavInput_KeyUp_)
-        .value("NAV_INPUT__KEY_DOWN", ImGuiNavInput_KeyDown_)
+        .value("NAV_INPUT_FOCUS_PREV", ImGuiNavInput_FocusPrev)
+        .value("NAV_INPUT_FOCUS_NEXT", ImGuiNavInput_FocusNext)
+        .value("NAV_INPUT_TWEAK_SLOW", ImGuiNavInput_TweakSlow)
+        .value("NAV_INPUT_TWEAK_FAST", ImGuiNavInput_TweakFast)
+        .value("NAV_INPUT_KEY_MENU", ImGuiNavInput_KeyMenu_)
+        .value("NAV_INPUT_KEY_LEFT", ImGuiNavInput_KeyLeft_)
+        .value("NAV_INPUT_KEY_RIGHT", ImGuiNavInput_KeyRight_)
+        .value("NAV_INPUT_KEY_UP", ImGuiNavInput_KeyUp_)
+        .value("NAV_INPUT_KEY_DOWN", ImGuiNavInput_KeyDown_)
         .value("NAV_INPUT_COUNT", ImGuiNavInput_COUNT)
-        .value("NAV_INPUT__INTERNAL_START", ImGuiNavInput_InternalStart_)
+        .value("NAV_INPUT_INTERNAL_START", ImGuiNavInput_InternalStart_)
         .export_values();
 
     py::enum_<ImGuiConfigFlags_>(deargui, "ConfigFlags")
-        .value("CONFIG_FLAGS__NAV_ENABLE_KEYBOARD", ImGuiConfigFlags_NavEnableKeyboard)
-        .value("CONFIG_FLAGS__NAV_ENABLE_GAMEPAD", ImGuiConfigFlags_NavEnableGamepad)
-        .value("CONFIG_FLAGS__NAV_ENABLE_SET_MOUSE_POS", ImGuiConfigFlags_NavEnableSetMousePos)
-        .value("CONFIG_FLAGS__NAV_NO_CAPTURE_KEYBOARD", ImGuiConfigFlags_NavNoCaptureKeyboard)
-        .value("CONFIG_FLAGS__NO_MOUSE", ImGuiConfigFlags_NoMouse)
-        .value("CONFIG_FLAGS__NO_MOUSE_CURSOR_CHANGE", ImGuiConfigFlags_NoMouseCursorChange)
-        .value("CONFIG_FLAGS__IS_SRGB", ImGuiConfigFlags_IsSRGB)
-        .value("CONFIG_FLAGS__IS_TOUCH_SCREEN", ImGuiConfigFlags_IsTouchScreen)
+        .value("CONFIG_FLAGS_NAV_ENABLE_KEYBOARD", ImGuiConfigFlags_NavEnableKeyboard)
+        .value("CONFIG_FLAGS_NAV_ENABLE_GAMEPAD", ImGuiConfigFlags_NavEnableGamepad)
+        .value("CONFIG_FLAGS_NAV_ENABLE_SET_MOUSE_POS", ImGuiConfigFlags_NavEnableSetMousePos)
+        .value("CONFIG_FLAGS_NAV_NO_CAPTURE_KEYBOARD", ImGuiConfigFlags_NavNoCaptureKeyboard)
+        .value("CONFIG_FLAGS_NO_MOUSE", ImGuiConfigFlags_NoMouse)
+        .value("CONFIG_FLAGS_NO_MOUSE_CURSOR_CHANGE", ImGuiConfigFlags_NoMouseCursorChange)
+        .value("CONFIG_FLAGS_IS_SRGB", ImGuiConfigFlags_IsSRGB)
+        .value("CONFIG_FLAGS_IS_TOUCH_SCREEN", ImGuiConfigFlags_IsTouchScreen)
         .export_values();
 
     py::enum_<ImGuiBackendFlags_>(deargui, "BackendFlags")
-        .value("BACKEND_FLAGS__HAS_GAMEPAD", ImGuiBackendFlags_HasGamepad)
-        .value("BACKEND_FLAGS__HAS_MOUSE_CURSORS", ImGuiBackendFlags_HasMouseCursors)
-        .value("BACKEND_FLAGS__HAS_SET_MOUSE_POS", ImGuiBackendFlags_HasSetMousePos)
+        .value("BACKEND_FLAGS_HAS_GAMEPAD", ImGuiBackendFlags_HasGamepad)
+        .value("BACKEND_FLAGS_HAS_MOUSE_CURSORS", ImGuiBackendFlags_HasMouseCursors)
+        .value("BACKEND_FLAGS_HAS_SET_MOUSE_POS", ImGuiBackendFlags_HasSetMousePos)
         .export_values();
 
     py::enum_<ImGuiCol_>(deargui, "Col")
-        .value("COL__TEXT", ImGuiCol_Text)
-        .value("COL__TEXT_DISABLED", ImGuiCol_TextDisabled)
-        .value("COL__WINDOW_BG", ImGuiCol_WindowBg)
-        .value("COL__CHILD_BG", ImGuiCol_ChildBg)
-        .value("COL__POPUP_BG", ImGuiCol_PopupBg)
-        .value("COL__BORDER", ImGuiCol_Border)
-        .value("COL__BORDER_SHADOW", ImGuiCol_BorderShadow)
-        .value("COL__FRAME_BG", ImGuiCol_FrameBg)
-        .value("COL__FRAME_BG_HOVERED", ImGuiCol_FrameBgHovered)
-        .value("COL__FRAME_BG_ACTIVE", ImGuiCol_FrameBgActive)
-        .value("COL__TITLE_BG", ImGuiCol_TitleBg)
-        .value("COL__TITLE_BG_ACTIVE", ImGuiCol_TitleBgActive)
-        .value("COL__TITLE_BG_COLLAPSED", ImGuiCol_TitleBgCollapsed)
-        .value("COL__MENU_BAR_BG", ImGuiCol_MenuBarBg)
-        .value("COL__SCROLLBAR_BG", ImGuiCol_ScrollbarBg)
-        .value("COL__SCROLLBAR_GRAB", ImGuiCol_ScrollbarGrab)
-        .value("COL__SCROLLBAR_GRAB_HOVERED", ImGuiCol_ScrollbarGrabHovered)
-        .value("COL__SCROLLBAR_GRAB_ACTIVE", ImGuiCol_ScrollbarGrabActive)
-        .value("COL__CHECK_MARK", ImGuiCol_CheckMark)
-        .value("COL__SLIDER_GRAB", ImGuiCol_SliderGrab)
-        .value("COL__SLIDER_GRAB_ACTIVE", ImGuiCol_SliderGrabActive)
-        .value("COL__BUTTON", ImGuiCol_Button)
-        .value("COL__BUTTON_HOVERED", ImGuiCol_ButtonHovered)
-        .value("COL__BUTTON_ACTIVE", ImGuiCol_ButtonActive)
-        .value("COL__HEADER", ImGuiCol_Header)
-        .value("COL__HEADER_HOVERED", ImGuiCol_HeaderHovered)
-        .value("COL__HEADER_ACTIVE", ImGuiCol_HeaderActive)
-        .value("COL__SEPARATOR", ImGuiCol_Separator)
-        .value("COL__SEPARATOR_HOVERED", ImGuiCol_SeparatorHovered)
-        .value("COL__SEPARATOR_ACTIVE", ImGuiCol_SeparatorActive)
-        .value("COL__RESIZE_GRIP", ImGuiCol_ResizeGrip)
-        .value("COL__RESIZE_GRIP_HOVERED", ImGuiCol_ResizeGripHovered)
-        .value("COL__RESIZE_GRIP_ACTIVE", ImGuiCol_ResizeGripActive)
-        .value("COL__PLOT_LINES", ImGuiCol_PlotLines)
-        .value("COL__PLOT_LINES_HOVERED", ImGuiCol_PlotLinesHovered)
-        .value("COL__PLOT_HISTOGRAM", ImGuiCol_PlotHistogram)
-        .value("COL__PLOT_HISTOGRAM_HOVERED", ImGuiCol_PlotHistogramHovered)
-        .value("COL__TEXT_SELECTED_BG", ImGuiCol_TextSelectedBg)
-        .value("COL__DRAG_DROP_TARGET", ImGuiCol_DragDropTarget)
-        .value("COL__NAV_HIGHLIGHT", ImGuiCol_NavHighlight)
-        .value("COL__NAV_WINDOWING_HIGHLIGHT", ImGuiCol_NavWindowingHighlight)
-        .value("COL__NAV_WINDOWING_DIM_BG", ImGuiCol_NavWindowingDimBg)
-        .value("COL__MODAL_WINDOW_DIM_BG", ImGuiCol_ModalWindowDimBg)
+        .value("COL_TEXT", ImGuiCol_Text)
+        .value("COL_TEXT_DISABLED", ImGuiCol_TextDisabled)
+        .value("COL_WINDOW_BG", ImGuiCol_WindowBg)
+        .value("COL_CHILD_BG", ImGuiCol_ChildBg)
+        .value("COL_POPUP_BG", ImGuiCol_PopupBg)
+        .value("COL_BORDER", ImGuiCol_Border)
+        .value("COL_BORDER_SHADOW", ImGuiCol_BorderShadow)
+        .value("COL_FRAME_BG", ImGuiCol_FrameBg)
+        .value("COL_FRAME_BG_HOVERED", ImGuiCol_FrameBgHovered)
+        .value("COL_FRAME_BG_ACTIVE", ImGuiCol_FrameBgActive)
+        .value("COL_TITLE_BG", ImGuiCol_TitleBg)
+        .value("COL_TITLE_BG_ACTIVE", ImGuiCol_TitleBgActive)
+        .value("COL_TITLE_BG_COLLAPSED", ImGuiCol_TitleBgCollapsed)
+        .value("COL_MENU_BAR_BG", ImGuiCol_MenuBarBg)
+        .value("COL_SCROLLBAR_BG", ImGuiCol_ScrollbarBg)
+        .value("COL_SCROLLBAR_GRAB", ImGuiCol_ScrollbarGrab)
+        .value("COL_SCROLLBAR_GRAB_HOVERED", ImGuiCol_ScrollbarGrabHovered)
+        .value("COL_SCROLLBAR_GRAB_ACTIVE", ImGuiCol_ScrollbarGrabActive)
+        .value("COL_CHECK_MARK", ImGuiCol_CheckMark)
+        .value("COL_SLIDER_GRAB", ImGuiCol_SliderGrab)
+        .value("COL_SLIDER_GRAB_ACTIVE", ImGuiCol_SliderGrabActive)
+        .value("COL_BUTTON", ImGuiCol_Button)
+        .value("COL_BUTTON_HOVERED", ImGuiCol_ButtonHovered)
+        .value("COL_BUTTON_ACTIVE", ImGuiCol_ButtonActive)
+        .value("COL_HEADER", ImGuiCol_Header)
+        .value("COL_HEADER_HOVERED", ImGuiCol_HeaderHovered)
+        .value("COL_HEADER_ACTIVE", ImGuiCol_HeaderActive)
+        .value("COL_SEPARATOR", ImGuiCol_Separator)
+        .value("COL_SEPARATOR_HOVERED", ImGuiCol_SeparatorHovered)
+        .value("COL_SEPARATOR_ACTIVE", ImGuiCol_SeparatorActive)
+        .value("COL_RESIZE_GRIP", ImGuiCol_ResizeGrip)
+        .value("COL_RESIZE_GRIP_HOVERED", ImGuiCol_ResizeGripHovered)
+        .value("COL_RESIZE_GRIP_ACTIVE", ImGuiCol_ResizeGripActive)
+        .value("COL_PLOT_LINES", ImGuiCol_PlotLines)
+        .value("COL_PLOT_LINES_HOVERED", ImGuiCol_PlotLinesHovered)
+        .value("COL_PLOT_HISTOGRAM", ImGuiCol_PlotHistogram)
+        .value("COL_PLOT_HISTOGRAM_HOVERED", ImGuiCol_PlotHistogramHovered)
+        .value("COL_TEXT_SELECTED_BG", ImGuiCol_TextSelectedBg)
+        .value("COL_DRAG_DROP_TARGET", ImGuiCol_DragDropTarget)
+        .value("COL_NAV_HIGHLIGHT", ImGuiCol_NavHighlight)
+        .value("COL_NAV_WINDOWING_HIGHLIGHT", ImGuiCol_NavWindowingHighlight)
+        .value("COL_NAV_WINDOWING_DIM_BG", ImGuiCol_NavWindowingDimBg)
+        .value("COL_MODAL_WINDOW_DIM_BG", ImGuiCol_ModalWindowDimBg)
         .value("COL_COUNT", ImGuiCol_COUNT)
         .export_values();
 
     py::enum_<ImGuiStyleVar_>(deargui, "StyleVar")
-        .value("STYLE_VAR__ALPHA", ImGuiStyleVar_Alpha)
-        .value("STYLE_VAR__WINDOW_PADDING", ImGuiStyleVar_WindowPadding)
-        .value("STYLE_VAR__WINDOW_ROUNDING", ImGuiStyleVar_WindowRounding)
-        .value("STYLE_VAR__WINDOW_BORDER_SIZE", ImGuiStyleVar_WindowBorderSize)
-        .value("STYLE_VAR__WINDOW_MIN_SIZE", ImGuiStyleVar_WindowMinSize)
-        .value("STYLE_VAR__WINDOW_TITLE_ALIGN", ImGuiStyleVar_WindowTitleAlign)
-        .value("STYLE_VAR__CHILD_ROUNDING", ImGuiStyleVar_ChildRounding)
-        .value("STYLE_VAR__CHILD_BORDER_SIZE", ImGuiStyleVar_ChildBorderSize)
-        .value("STYLE_VAR__POPUP_ROUNDING", ImGuiStyleVar_PopupRounding)
-        .value("STYLE_VAR__POPUP_BORDER_SIZE", ImGuiStyleVar_PopupBorderSize)
-        .value("STYLE_VAR__FRAME_PADDING", ImGuiStyleVar_FramePadding)
-        .value("STYLE_VAR__FRAME_ROUNDING", ImGuiStyleVar_FrameRounding)
-        .value("STYLE_VAR__FRAME_BORDER_SIZE", ImGuiStyleVar_FrameBorderSize)
-        .value("STYLE_VAR__ITEM_SPACING", ImGuiStyleVar_ItemSpacing)
-        .value("STYLE_VAR__ITEM_INNER_SPACING", ImGuiStyleVar_ItemInnerSpacing)
-        .value("STYLE_VAR__INDENT_SPACING", ImGuiStyleVar_IndentSpacing)
-        .value("STYLE_VAR__SCROLLBAR_SIZE", ImGuiStyleVar_ScrollbarSize)
-        .value("STYLE_VAR__SCROLLBAR_ROUNDING", ImGuiStyleVar_ScrollbarRounding)
-        .value("STYLE_VAR__GRAB_MIN_SIZE", ImGuiStyleVar_GrabMinSize)
-        .value("STYLE_VAR__GRAB_ROUNDING", ImGuiStyleVar_GrabRounding)
-        .value("STYLE_VAR__BUTTON_TEXT_ALIGN", ImGuiStyleVar_ButtonTextAlign)
+        .value("STYLE_VAR_ALPHA", ImGuiStyleVar_Alpha)
+        .value("STYLE_VAR_WINDOW_PADDING", ImGuiStyleVar_WindowPadding)
+        .value("STYLE_VAR_WINDOW_ROUNDING", ImGuiStyleVar_WindowRounding)
+        .value("STYLE_VAR_WINDOW_BORDER_SIZE", ImGuiStyleVar_WindowBorderSize)
+        .value("STYLE_VAR_WINDOW_MIN_SIZE", ImGuiStyleVar_WindowMinSize)
+        .value("STYLE_VAR_WINDOW_TITLE_ALIGN", ImGuiStyleVar_WindowTitleAlign)
+        .value("STYLE_VAR_CHILD_ROUNDING", ImGuiStyleVar_ChildRounding)
+        .value("STYLE_VAR_CHILD_BORDER_SIZE", ImGuiStyleVar_ChildBorderSize)
+        .value("STYLE_VAR_POPUP_ROUNDING", ImGuiStyleVar_PopupRounding)
+        .value("STYLE_VAR_POPUP_BORDER_SIZE", ImGuiStyleVar_PopupBorderSize)
+        .value("STYLE_VAR_FRAME_PADDING", ImGuiStyleVar_FramePadding)
+        .value("STYLE_VAR_FRAME_ROUNDING", ImGuiStyleVar_FrameRounding)
+        .value("STYLE_VAR_FRAME_BORDER_SIZE", ImGuiStyleVar_FrameBorderSize)
+        .value("STYLE_VAR_ITEM_SPACING", ImGuiStyleVar_ItemSpacing)
+        .value("STYLE_VAR_ITEM_INNER_SPACING", ImGuiStyleVar_ItemInnerSpacing)
+        .value("STYLE_VAR_INDENT_SPACING", ImGuiStyleVar_IndentSpacing)
+        .value("STYLE_VAR_SCROLLBAR_SIZE", ImGuiStyleVar_ScrollbarSize)
+        .value("STYLE_VAR_SCROLLBAR_ROUNDING", ImGuiStyleVar_ScrollbarRounding)
+        .value("STYLE_VAR_GRAB_MIN_SIZE", ImGuiStyleVar_GrabMinSize)
+        .value("STYLE_VAR_GRAB_ROUNDING", ImGuiStyleVar_GrabRounding)
+        .value("STYLE_VAR_BUTTON_TEXT_ALIGN", ImGuiStyleVar_ButtonTextAlign)
         .value("STYLE_VAR_COUNT", ImGuiStyleVar_COUNT)
         .export_values();
 
     py::enum_<ImGuiColorEditFlags_>(deargui, "ColorEditFlags")
-        .value("COLOR_EDIT_FLAGS__NONE", ImGuiColorEditFlags_None)
-        .value("COLOR_EDIT_FLAGS__NO_ALPHA", ImGuiColorEditFlags_NoAlpha)
-        .value("COLOR_EDIT_FLAGS__NO_PICKER", ImGuiColorEditFlags_NoPicker)
-        .value("COLOR_EDIT_FLAGS__NO_OPTIONS", ImGuiColorEditFlags_NoOptions)
-        .value("COLOR_EDIT_FLAGS__NO_SMALL_PREVIEW", ImGuiColorEditFlags_NoSmallPreview)
-        .value("COLOR_EDIT_FLAGS__NO_INPUTS", ImGuiColorEditFlags_NoInputs)
-        .value("COLOR_EDIT_FLAGS__NO_TOOLTIP", ImGuiColorEditFlags_NoTooltip)
-        .value("COLOR_EDIT_FLAGS__NO_LABEL", ImGuiColorEditFlags_NoLabel)
-        .value("COLOR_EDIT_FLAGS__NO_SIDE_PREVIEW", ImGuiColorEditFlags_NoSidePreview)
-        .value("COLOR_EDIT_FLAGS__NO_DRAG_DROP", ImGuiColorEditFlags_NoDragDrop)
-        .value("COLOR_EDIT_FLAGS__ALPHA_BAR", ImGuiColorEditFlags_AlphaBar)
-        .value("COLOR_EDIT_FLAGS__ALPHA_PREVIEW", ImGuiColorEditFlags_AlphaPreview)
-        .value("COLOR_EDIT_FLAGS__ALPHA_PREVIEW_HALF", ImGuiColorEditFlags_AlphaPreviewHalf)
+        .value("COLOR_EDIT_FLAGS_NONE", ImGuiColorEditFlags_None)
+        .value("COLOR_EDIT_FLAGS_NO_ALPHA", ImGuiColorEditFlags_NoAlpha)
+        .value("COLOR_EDIT_FLAGS_NO_PICKER", ImGuiColorEditFlags_NoPicker)
+        .value("COLOR_EDIT_FLAGS_NO_OPTIONS", ImGuiColorEditFlags_NoOptions)
+        .value("COLOR_EDIT_FLAGS_NO_SMALL_PREVIEW", ImGuiColorEditFlags_NoSmallPreview)
+        .value("COLOR_EDIT_FLAGS_NO_INPUTS", ImGuiColorEditFlags_NoInputs)
+        .value("COLOR_EDIT_FLAGS_NO_TOOLTIP", ImGuiColorEditFlags_NoTooltip)
+        .value("COLOR_EDIT_FLAGS_NO_LABEL", ImGuiColorEditFlags_NoLabel)
+        .value("COLOR_EDIT_FLAGS_NO_SIDE_PREVIEW", ImGuiColorEditFlags_NoSidePreview)
+        .value("COLOR_EDIT_FLAGS_NO_DRAG_DROP", ImGuiColorEditFlags_NoDragDrop)
+        .value("COLOR_EDIT_FLAGS_ALPHA_BAR", ImGuiColorEditFlags_AlphaBar)
+        .value("COLOR_EDIT_FLAGS_ALPHA_PREVIEW", ImGuiColorEditFlags_AlphaPreview)
+        .value("COLOR_EDIT_FLAGS_ALPHA_PREVIEW_HALF", ImGuiColorEditFlags_AlphaPreviewHalf)
         .value("COLOR_EDIT_FLAGS_HDR", ImGuiColorEditFlags_HDR)
         .value("COLOR_EDIT_FLAGS_RGB", ImGuiColorEditFlags_RGB)
         .value("COLOR_EDIT_FLAGS_HSV", ImGuiColorEditFlags_HSV)
         .value("COLOR_EDIT_FLAGS_HEX", ImGuiColorEditFlags_HEX)
-        .value("COLOR_EDIT_FLAGS__UINT8", ImGuiColorEditFlags_Uint8)
-        .value("COLOR_EDIT_FLAGS__FLOAT", ImGuiColorEditFlags_Float)
-        .value("COLOR_EDIT_FLAGS__PICKER_HUE_BAR", ImGuiColorEditFlags_PickerHueBar)
-        .value("COLOR_EDIT_FLAGS__PICKER_HUE_WHEEL", ImGuiColorEditFlags_PickerHueWheel)
-        .value("COLOR_EDIT_FLAGS___INPUTS_MASK", ImGuiColorEditFlags__InputsMask)
-        .value("COLOR_EDIT_FLAGS___DATA_TYPE_MASK", ImGuiColorEditFlags__DataTypeMask)
-        .value("COLOR_EDIT_FLAGS___PICKER_MASK", ImGuiColorEditFlags__PickerMask)
-        .value("COLOR_EDIT_FLAGS___OPTIONS_DEFAULT", ImGuiColorEditFlags__OptionsDefault)
+        .value("COLOR_EDIT_FLAGS_UINT8", ImGuiColorEditFlags_Uint8)
+        .value("COLOR_EDIT_FLAGS_FLOAT", ImGuiColorEditFlags_Float)
+        .value("COLOR_EDIT_FLAGS_PICKER_HUE_BAR", ImGuiColorEditFlags_PickerHueBar)
+        .value("COLOR_EDIT_FLAGS_PICKER_HUE_WHEEL", ImGuiColorEditFlags_PickerHueWheel)
+        .value("COLOR_EDIT_FLAGS__INPUTS_MASK", ImGuiColorEditFlags__InputsMask)
+        .value("COLOR_EDIT_FLAGS__DATA_TYPE_MASK", ImGuiColorEditFlags__DataTypeMask)
+        .value("COLOR_EDIT_FLAGS__PICKER_MASK", ImGuiColorEditFlags__PickerMask)
+        .value("COLOR_EDIT_FLAGS__OPTIONS_DEFAULT", ImGuiColorEditFlags__OptionsDefault)
         .export_values();
 
     py::enum_<ImGuiMouseCursor_>(deargui, "MouseCursor")
-        .value("MOUSE_CURSOR__NONE", ImGuiMouseCursor_None)
-        .value("MOUSE_CURSOR__ARROW", ImGuiMouseCursor_Arrow)
-        .value("MOUSE_CURSOR__TEXT_INPUT", ImGuiMouseCursor_TextInput)
-        .value("MOUSE_CURSOR__RESIZE_ALL", ImGuiMouseCursor_ResizeAll)
-        .value("MOUSE_CURSOR__RESIZE_NS", ImGuiMouseCursor_ResizeNS)
-        .value("MOUSE_CURSOR__RESIZE_EW", ImGuiMouseCursor_ResizeEW)
-        .value("MOUSE_CURSOR__RESIZE_NESW", ImGuiMouseCursor_ResizeNESW)
-        .value("MOUSE_CURSOR__RESIZE_NWSE", ImGuiMouseCursor_ResizeNWSE)
-        .value("MOUSE_CURSOR__HAND", ImGuiMouseCursor_Hand)
+        .value("MOUSE_CURSOR_NONE", ImGuiMouseCursor_None)
+        .value("MOUSE_CURSOR_ARROW", ImGuiMouseCursor_Arrow)
+        .value("MOUSE_CURSOR_TEXT_INPUT", ImGuiMouseCursor_TextInput)
+        .value("MOUSE_CURSOR_RESIZE_ALL", ImGuiMouseCursor_ResizeAll)
+        .value("MOUSE_CURSOR_RESIZE_NS", ImGuiMouseCursor_ResizeNS)
+        .value("MOUSE_CURSOR_RESIZE_EW", ImGuiMouseCursor_ResizeEW)
+        .value("MOUSE_CURSOR_RESIZE_NESW", ImGuiMouseCursor_ResizeNESW)
+        .value("MOUSE_CURSOR_RESIZE_NWSE", ImGuiMouseCursor_ResizeNWSE)
+        .value("MOUSE_CURSOR_HAND", ImGuiMouseCursor_Hand)
         .value("MOUSE_CURSOR_COUNT", ImGuiMouseCursor_COUNT)
         .export_values();
 
     py::enum_<ImGuiCond_>(deargui, "Cond")
-        .value("COND__ALWAYS", ImGuiCond_Always)
-        .value("COND__ONCE", ImGuiCond_Once)
-        .value("COND__FIRST_USE_EVER", ImGuiCond_FirstUseEver)
-        .value("COND__APPEARING", ImGuiCond_Appearing)
+        .value("COND_ALWAYS", ImGuiCond_Always)
+        .value("COND_ONCE", ImGuiCond_Once)
+        .value("COND_FIRST_USE_EVER", ImGuiCond_FirstUseEver)
+        .value("COND_APPEARING", ImGuiCond_Appearing)
         .export_values();
 
     py::class_<ImGuiStyle> Style(deargui, "Style");
@@ -2059,20 +2076,20 @@ PYBIND11_MODULE(deargui, deargui)
     DrawChannel.def_readwrite("cmd_buffer", &ImDrawChannel::CmdBuffer);
     DrawChannel.def_readwrite("idx_buffer", &ImDrawChannel::IdxBuffer);
     py::enum_<ImDrawCornerFlags_>(deargui, "DrawCornerFlags")
-        .value("DRAW_CORNER_FLAGS__TOP_LEFT", ImDrawCornerFlags_TopLeft)
-        .value("DRAW_CORNER_FLAGS__TOP_RIGHT", ImDrawCornerFlags_TopRight)
-        .value("DRAW_CORNER_FLAGS__BOT_LEFT", ImDrawCornerFlags_BotLeft)
-        .value("DRAW_CORNER_FLAGS__BOT_RIGHT", ImDrawCornerFlags_BotRight)
-        .value("DRAW_CORNER_FLAGS__TOP", ImDrawCornerFlags_Top)
-        .value("DRAW_CORNER_FLAGS__BOT", ImDrawCornerFlags_Bot)
-        .value("DRAW_CORNER_FLAGS__LEFT", ImDrawCornerFlags_Left)
-        .value("DRAW_CORNER_FLAGS__RIGHT", ImDrawCornerFlags_Right)
-        .value("DRAW_CORNER_FLAGS__ALL", ImDrawCornerFlags_All)
+        .value("DRAW_CORNER_FLAGS_TOP_LEFT", ImDrawCornerFlags_TopLeft)
+        .value("DRAW_CORNER_FLAGS_TOP_RIGHT", ImDrawCornerFlags_TopRight)
+        .value("DRAW_CORNER_FLAGS_BOT_LEFT", ImDrawCornerFlags_BotLeft)
+        .value("DRAW_CORNER_FLAGS_BOT_RIGHT", ImDrawCornerFlags_BotRight)
+        .value("DRAW_CORNER_FLAGS_TOP", ImDrawCornerFlags_Top)
+        .value("DRAW_CORNER_FLAGS_BOT", ImDrawCornerFlags_Bot)
+        .value("DRAW_CORNER_FLAGS_LEFT", ImDrawCornerFlags_Left)
+        .value("DRAW_CORNER_FLAGS_RIGHT", ImDrawCornerFlags_Right)
+        .value("DRAW_CORNER_FLAGS_ALL", ImDrawCornerFlags_All)
         .export_values();
 
     py::enum_<ImDrawListFlags_>(deargui, "DrawListFlags")
-        .value("DRAW_LIST_FLAGS__ANTI_ALIASED_LINES", ImDrawListFlags_AntiAliasedLines)
-        .value("DRAW_LIST_FLAGS__ANTI_ALIASED_FILL", ImDrawListFlags_AntiAliasedFill)
+        .value("DRAW_LIST_FLAGS_ANTI_ALIASED_LINES", ImDrawListFlags_AntiAliasedLines)
+        .value("DRAW_LIST_FLAGS_ANTI_ALIASED_FILL", ImDrawListFlags_AntiAliasedFill)
         .export_values();
 
     py::class_<ImDrawList> DrawList(deargui, "DrawList");
@@ -2386,9 +2403,9 @@ PYBIND11_MODULE(deargui, deargui)
     FontGlyph.def_readwrite("u1", &ImFontGlyph::U1);
     FontGlyph.def_readwrite("v1", &ImFontGlyph::V1);
     py::enum_<ImFontAtlasFlags_>(deargui, "FontAtlasFlags")
-        .value("FONT_ATLAS_FLAGS__NONE", ImFontAtlasFlags_None)
-        .value("FONT_ATLAS_FLAGS__NO_POWER_OF_TWO_HEIGHT", ImFontAtlasFlags_NoPowerOfTwoHeight)
-        .value("FONT_ATLAS_FLAGS__NO_MOUSE_CURSORS", ImFontAtlasFlags_NoMouseCursors)
+        .value("FONT_ATLAS_FLAGS_NONE", ImFontAtlasFlags_None)
+        .value("FONT_ATLAS_FLAGS_NO_POWER_OF_TWO_HEIGHT", ImFontAtlasFlags_NoPowerOfTwoHeight)
+        .value("FONT_ATLAS_FLAGS_NO_MOUSE_CURSORS", ImFontAtlasFlags_NoMouseCursors)
         .export_values();
 
     py::class_<ImFontAtlas> FontAtlas(deargui, "FontAtlas");
@@ -2542,6 +2559,24 @@ PYBIND11_MODULE(deargui, deargui)
     , py::arg("overwrite_dst") = true
     , py::return_value_policy::automatic_reference);
 
+    IO.def("set_mouse_down", [](ImGuiIO& self, int button, bool down)
+    {
+        if (button < 0) throw py::index_error();
+        if (button >= IM_ARRAYSIZE(self.MouseDown)) throw py::index_error();
+        self.MouseDown[button] = down;
+    }, py::arg("button"), py::arg("down"));
+    IO.def("set_key_down", [](ImGuiIO& self, int key, bool down)
+    {
+        if (key < 0) throw py::index_error();
+        if (key >= IM_ARRAYSIZE(self.KeysDown)) throw py::index_error();
+        self.KeysDown[key] = down;
+    }, py::arg("key"), py::arg("down"));
+    IO.def("set_key_map", [](ImGuiIO& self, int key, int value)
+    {
+        if (key < 0) throw py::index_error();
+        if (key >= IM_ARRAYSIZE(self.KeyMap)) throw py::index_error();
+        self.KeyMap[key] = value;
+    }, py::arg("key"), py::arg("value"));
     DrawData.def_property_readonly("cmd_lists", [](const ImDrawData& self)
     {
         py::list ret;

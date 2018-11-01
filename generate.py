@@ -6,6 +6,7 @@ from clang import cindex
 
 HEADER = """
 #include <pybind11/pybind11.h>
+#include <pybind11/functional.h>
 #include <pybind11/stl.h>
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -52,38 +53,72 @@ PYBIND11_MODULE(deargui, deargui)
         int w, h;
         io.Fonts->GetTexDataAsAlpha8(&pixels, &w, &h, nullptr);
     });
-    deargui.def("get_display_size", []()
+    deargui.def("input_text", [](const char* label, char* data, size_t max_size, ImGuiInputTextFlags flags)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        return io.DisplaySize;
+        char text[max_size + 1];
+        strcpy(text, data);
+        auto ret = ImGui::InputText(label, text, max_size, flags, nullptr, NULL);
+        return std::make_tuple(ret, std::string(text));
     });
-    deargui.def("set_display_size", [](ImVec2 size)
+    deargui.def("input_text_multiline", [](const char* label, char* data, size_t max_size, const ImVec2& size, ImGuiInputTextFlags flags)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        io.DisplaySize = size;
-    }, py::arg("size"));
-    deargui.def("set_mouse_pos", [](ImVec2 pos)
+        char text[max_size + 1];
+        strcpy(text, data);
+        auto ret = ImGui::InputTextMultiline(label, text, max_size, size, flags, nullptr, NULL);
+        return std::make_tuple(ret, std::string(text));
+    });
+    deargui.def("combo", [](const char* label, int * current_item, std::vector<std::string> items, int popup_max_height_in_items)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        io.MousePos = pos;
-    }, py::arg("pos"));
-    deargui.def("set_mouse_down", [](int button, bool down)
+        std::vector<const char*> ptrs;
+        for (const std::string& s : items)
+        {
+            ptrs.push_back(s.c_str());
+        }
+        auto ret = ImGui::Combo(label, current_item, ptrs.data(), ptrs.size(), popup_max_height_in_items);
+        return std::make_tuple(ret, current_item);
+    }
+    , py::arg("label")
+    , py::arg("current_item")
+    , py::arg("items")
+    , py::arg("popup_max_height_in_items") = -1
+    , py::return_value_policy::automatic_reference);
+    deargui.def("list_box", [](const char* label, int * current_item, std::vector<std::string> items, int height_in_items)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        if (button < 0) throw py::index_error();
-        if (button >= IM_ARRAYSIZE(io.MouseDown)) throw py::index_error();
-        io.MouseDown[button] = down;
-    }, py::arg("button"), py::arg("down"));
-    deargui.def("set_key_down", [](int key, bool down)
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        if (key < 0) throw py::index_error();
-        if (key >= IM_ARRAYSIZE(io.KeysDown)) throw py::index_error();
-        io.KeysDown[key] = down;
-    }, py::arg("key"), py::arg("down"));
+        std::vector<const char*> ptrs;
+        for (const std::string& s : items)
+        {
+            ptrs.push_back(s.c_str());
+        }
+        auto ret = ImGui::ListBox(label, current_item, ptrs.data(), ptrs.size(), height_in_items);
+        return std::make_tuple(ret, current_item);
+    }
+    , py::arg("label")
+    , py::arg("current_item")
+    , py::arg("items")
+    , py::arg("height_in_items") = -1
+    , py::return_value_policy::automatic_reference);
+
 """
 
 FOOTER = """
+    IO.def("set_mouse_down", [](ImGuiIO& self, int button, bool down)
+    {
+        if (button < 0) throw py::index_error();
+        if (button >= IM_ARRAYSIZE(self.MouseDown)) throw py::index_error();
+        self.MouseDown[button] = down;
+    }, py::arg("button"), py::arg("down"));
+    IO.def("set_key_down", [](ImGuiIO& self, int key, bool down)
+    {
+        if (key < 0) throw py::index_error();
+        if (key >= IM_ARRAYSIZE(self.KeysDown)) throw py::index_error();
+        self.KeysDown[key] = down;
+    }, py::arg("key"), py::arg("down"));
+    IO.def("set_key_map", [](ImGuiIO& self, int key, int value)
+    {
+        if (key < 0) throw py::index_error();
+        if (key >= IM_ARRAYSIZE(self.KeyMap)) throw py::index_error();
+        self.KeyMap[key] = value;
+    }, py::arg("key"), py::arg("value"));
     DrawData.def_property_readonly("cmd_lists", [](const ImDrawData& self)
     {
         py::list ret;
@@ -145,10 +180,6 @@ EXCLUDES = set(
     'ImGui::SaveIniSettingsToMemory',
 
     # Callbacks
-    'ImGui::Combo',
-    'ImGui::InputText',
-    'ImGui::InputTextMultiline',
-    'ImGui::ListBox',
     'ImGui::PlotLines',
     "ImGui::PlotHistogram",
     'ImGui::SetNextWindowSizeConstraints',
@@ -158,6 +189,10 @@ EXCLUDES = set(
     "ImDrawCmd::UserCallback",
 
     # Wrapped
+    'ImGui::Combo',
+    'ImGui::ListBox',
+    'ImGui::InputText',
+    'ImGui::InputTextMultiline',
     'ImDrawData::CmdLists',
     'ImGuiIO::MouseDown',
     'ImGuiIO::KeysDown',
@@ -222,8 +257,9 @@ def format_type(name):
 def format_enum(name):
     name = name.replace('ImGui', '')
     name = name.replace('Im', '')
-    name = name.rstrip('_')
     name = snakecase(name).upper()
+    name = name.replace('__', '_')
+    name = name.rstrip('_')
     return name
 
 def module(cursor):
@@ -410,6 +446,13 @@ def get_function_return(cursor):
         return returned[0]
     return ''
 
+def get_return_policy(cursor):
+    result = cursor.type.get_result()
+    if result.kind == cindex.TypeKind.LVALUEREFERENCE:
+        return 'py::return_value_policy::reference'
+    else:
+        return 'py::return_value_policy::automatic_reference'
+
 def parse_function(cursor, cls=None):
     if is_function_mappable(cursor):
         mname = module(cls)
@@ -425,12 +468,10 @@ def parse_function(cursor, cls=None):
             out('    {}{}({});'.format(ret, name(cursor), arg_names(arguments)))
             out('    return {};'.format(get_function_return(cursor)))
             out('}')
-            write_pyargs(arguments)
-            out(', py::return_value_policy::automatic_reference);')
         else:
             out('{}.def("{}", {}'.format(mname, pyname, cname))
-            write_pyargs(arguments)
-            out(', py::return_value_policy::automatic_reference);')
+        write_pyargs(arguments)
+        out(', {});'.format(get_return_policy(cursor)))
 
 def parse_class(cursor):
     if is_class_mappable(cursor):
