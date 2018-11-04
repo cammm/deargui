@@ -44,76 +44,13 @@ void template_ImVector(py::module &module, const char* name)
 PYBIND11_MODULE(deargui, deargui)
 {
     py::class_<ImGuiContext>(deargui, "Context");
-
-    deargui.def("init", []()
-    {
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO();
-        io.DisplaySize = ImVec2(100.0, 100.0);
-        unsigned char* pixels;
-        int w, h;
-        io.Fonts->GetTexDataAsAlpha8(&pixels, &w, &h, nullptr);
-    });
-    deargui.def("input_text", [](const char* label, char* data, size_t max_size, ImGuiInputTextFlags flags)
-    {
-        char text[max_size + 1];
-        strcpy(text, data);
-        auto ret = ImGui::InputText(label, text, max_size, flags, nullptr, NULL);
-        return std::make_tuple(ret, std::string(text));
-    });
-    deargui.def("input_text_multiline", [](const char* label, char* data, size_t max_size, const ImVec2& size, ImGuiInputTextFlags flags)
-    {
-        char text[max_size + 1];
-        strcpy(text, data);
-        auto ret = ImGui::InputTextMultiline(label, text, max_size, size, flags, nullptr, NULL);
-        return std::make_tuple(ret, std::string(text));
-    });
-    deargui.def("combo", [](const char* label, int * current_item, std::vector<std::string> items, int popup_max_height_in_items)
-    {
-        std::vector<const char*> ptrs;
-        for (const std::string& s : items)
-        {
-            ptrs.push_back(s.c_str());
-        }
-        auto ret = ImGui::Combo(label, current_item, ptrs.data(), ptrs.size(), popup_max_height_in_items);
-        return std::make_tuple(ret, current_item);
-    }
-    , py::arg("label")
-    , py::arg("current_item")
-    , py::arg("items")
-    , py::arg("popup_max_height_in_items") = -1
-    , py::return_value_policy::automatic_reference);
-    deargui.def("list_box", [](const char* label, int * current_item, std::vector<std::string> items, int height_in_items)
-    {
-        std::vector<const char*> ptrs;
-        for (const std::string& s : items)
-        {
-            ptrs.push_back(s.c_str());
-        }
-        auto ret = ImGui::ListBox(label, current_item, ptrs.data(), ptrs.size(), height_in_items);
-        return std::make_tuple(ret, current_item);
-    }
-    , py::arg("label")
-    , py::arg("current_item")
-    , py::arg("items")
-    , py::arg("height_in_items") = -1
-    , py::return_value_policy::automatic_reference);
-"""
-BROKEN = """
-
-    deargui.def("plot_lines", [](const char* label, std::vector<float> values, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size)
-    {
-        ImGui::PlotLines(label, values.data(), values.size(), values_offset, overlay_text, scale_min, scale_max, graph_size, sizeof(float));
-    }
-    , py::arg("label")
-    , py::arg("values")
-    , py::arg("values_offset") = 0
-    , py::arg("overlay_text") = nullptr
-    , py::arg("scale_min") = std::numeric_limits<float>::max()
-    , py::arg("scale_max") = std::numeric_limits<float>::max()
-    , py::arg("graph_size") = ImVec2(0, 0)
-    );
-
+    template_ImVector<char>(deargui, "Vector_char");
+    template_ImVector<float>(deargui, "Vector_float");
+    template_ImVector<unsigned char>(deargui, "Vector_unsignedchar");
+    template_ImVector<unsigned short>(deargui, "Vector_unsignedshort");
+    template_ImVector<ImDrawCmd>(deargui, "Vector_DrawCmd");
+    template_ImVector<ImDrawVert>(deargui, "Vector_DrawVert");
+    template_ImVector<ImFontGlyph>(deargui, "Vector_FontGlyph");
 """
 
 FOOTER = """
@@ -173,32 +110,95 @@ FOOTER = """
         return std::make_tuple(width, height, py::bytes(data));
     });
 
-    template_ImVector<char>(deargui, "Vector_char");
-    template_ImVector<float>(deargui, "Vector_float");
-    template_ImVector<unsigned char>(deargui, "Vector_unsignedchar");
-    template_ImVector<unsigned short>(deargui, "Vector_unsignedshort");
-    template_ImVector<ImDrawCmd>(deargui, "Vector_DrawCmd");
-    template_ImVector<ImDrawVert>(deargui, "Vector_DrawVert");
-    template_ImVector<ImFontGlyph>(deargui, "Vector_FontGlyph");
+    deargui.def("init", []()
+    {
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.DisplaySize = ImVec2(100.0, 100.0);
+        unsigned char* pixels;
+        int w, h;
+        io.Fonts->GetTexDataAsAlpha8(&pixels, &w, &h, nullptr);
+    });
+    deargui.def("input_text", [](const char* label, char* data, size_t max_size, ImGuiInputTextFlags flags)
+    {
+        char text[max_size + 1];
+        strcpy(text, data);
+        auto ret = ImGui::InputText(label, text, max_size, flags, nullptr, NULL);
+        return std::make_tuple(ret, std::string(text));
+    });
+    deargui.def("input_text_multiline", [](const char* label, char* data, size_t max_size, const ImVec2& size, ImGuiInputTextFlags flags)
+    {
+        char text[max_size + 1];
+        strcpy(text, data);
+        auto ret = ImGui::InputTextMultiline(label, text, max_size, size, flags, nullptr, NULL);
+        return std::make_tuple(ret, std::string(text));
+    });
+    deargui.def("combo", [](const char* label, int * current_item, std::vector<std::string> items, int popup_max_height_in_items)
+    {
+        std::vector<const char*> ptrs;
+        for (const std::string& s : items)
+        {
+            ptrs.push_back(s.c_str());
+        }
+        auto ret = ImGui::Combo(label, current_item, ptrs.data(), ptrs.size(), popup_max_height_in_items);
+        return std::make_tuple(ret, current_item);
+    }
+    , py::arg("label")
+    , py::arg("current_item")
+    , py::arg("items")
+    , py::arg("popup_max_height_in_items") = -1
+    , py::return_value_policy::automatic_reference);
+    deargui.def("list_box", [](const char* label, int * current_item, std::vector<std::string> items, int height_in_items)
+    {
+        std::vector<const char*> ptrs;
+        for (const std::string& s : items)
+        {
+            ptrs.push_back(s.c_str());
+        }
+        auto ret = ImGui::ListBox(label, current_item, ptrs.data(), ptrs.size(), height_in_items);
+        return std::make_tuple(ret, current_item);
+    }
+    , py::arg("label")
+    , py::arg("current_item")
+    , py::arg("items")
+    , py::arg("height_in_items") = -1
+    , py::return_value_policy::automatic_reference);
+    deargui.def("plot_lines", [](const char* label, std::vector<float> values, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size)
+    {
+        ImGui::PlotLines(label, values.data(), values.size(), values_offset, overlay_text, scale_min, scale_max, graph_size, sizeof(float));
+    }
+    , py::arg("label")
+    , py::arg("values")
+    , py::arg("values_offset") = 0
+    , py::arg("overlay_text") = nullptr
+    , py::arg("scale_min") = FLT_MAX
+    , py::arg("scale_max") = FLT_MAX
+    , py::arg("graph_size") = ImVec2(0,0)
+    );
+    deargui.def("plot_histogram", [](const char* label, std::vector<float> values, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size)
+    {
+        ImGui::PlotHistogram(label, values.data(), values.size(), values_offset, overlay_text, scale_min, scale_max, graph_size, sizeof(float));
+    }
+    , py::arg("label")
+    , py::arg("values")
+    , py::arg("values_offset") = 0
+    , py::arg("overlay_text") = nullptr
+    , py::arg("scale_min") = FLT_MAX
+    , py::arg("scale_max") = FLT_MAX
+    , py::arg("graph_size") = ImVec2(0,0)
+    );
 }
 """
 
 EXCLUDES = set(
 [
-    # Callbacks
-    'ImGui::PlotLines',
-    'ImGui::PlotHistogram',
-    'ImGui::SetNextWindowSizeConstraints',
-    'ImGuiIO::GetClipboardTextFn',
-    'ImGuiIO::SetClipboardTextFn',
-    'ImGuiIO::ImeSetInputScreenPosFn',
-    'ImDrawCmd::UserCallback',
-
     # Wrapped
     'ImGui::Combo',
     'ImGui::ListBox',
     'ImGui::InputText',
     'ImGui::InputTextMultiline',
+    'ImGui::PlotLines',
+    'ImGui::PlotHistogram',
     'ImDrawData::CmdLists',
     'ImGuiIO::MouseDown',
     'ImGuiIO::KeysDown',
@@ -207,7 +207,7 @@ EXCLUDES = set(
     'ImFontAtlas::GetTexDataAsAlpha8',
     'ImFontAtlas::GetTexDataAsRGBA32',
 
-    # Internal
+    # Internal / Ignored
     'ImGuiTextFilter::Filters',
     'ImGuiStorage::Data',
     'ImFontAtlas::TexPixelsAlpha8',
@@ -226,17 +226,18 @@ EXCLUDES = set(
     'ImFontAtlas::CalcCustomRectUV',
     'ImFontAtlas::GetMouseCursorTexData',
     'ImFont::CalcTextSizeA',
+    'ImGui::SetNextWindowSizeConstraints',
     'ImGui::SetAllocatorFunctions',
     'ImGui::MemAlloc',
     'ImGui::MemFree',
+    'ImGuiIO::GetClipboardTextFn',
+    'ImGuiIO::SetClipboardTextFn',
+    'ImGuiIO::ImeSetInputScreenPosFn',
+    'ImDrawCmd::UserCallback',
+    'ImColor::HSV',
     'ImNewDummy',
     'ImGuiTextBuffer',
     'CustomRect',
-
-    # Deprecated
-    'ImColor',
-    'ImGuiIO::DisplayVisibleMin',
-    'ImGuiIO::DisplayVisibleMax',
 ])
 
 OVERLOADED = set([
