@@ -1,0 +1,15 @@
+language: minimal
+
+matrix:
+    include:
+        - os: linux
+          env: PYTHON_VERSION=3.7.1
+        - os: osx
+          env: PYTHON_VERSION=3.7.1
+        - os: windows
+          env: PYTHON_VERSION=3.7.1
+
+install:
+    - python --version
+
+script: echo hello
