@@ -4,11 +4,13 @@ import setuptools
 class get_pybind_include(object):
     def __str__(self):
         import pybind11
+        print('get_pybind_include', pybind11.get_include())
         return pybind11.get_include()
 
 class get_pybind_user_include(object):
     def __str__(self):
         import pybind11
+        print('get_pybind_user_include', pybind11.get_include(True))
         return pybind11.get_include(True)
 
 if sys.platform == 'win32':
