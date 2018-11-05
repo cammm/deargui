@@ -1,12 +1,14 @@
-language: generic
 
 matrix:
     include:
         - os: linux
+          language: shell
           env: PYTHON_VERSION=3.7.1
         - os: osx
+          language: shell
           env: PYTHON_VERSION=3.7.1
         - os: windows
+          language: shell
           env: PYTHON_VERSION=3.7.1
 
 install:
