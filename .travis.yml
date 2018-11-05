@@ -12,8 +12,8 @@ matrix:
           env: PYTHON_VERSION=3.7.1
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then curl -L | http://mini.conda.ml; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl -L | http://mini.conda.ml; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then curl -L http://mini.conda.ml | bash -b; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl -L http://mini.conda.ml | bash -b; fi
   - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install miniconda3; fi
 
 install:
