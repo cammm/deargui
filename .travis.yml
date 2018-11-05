@@ -14,7 +14,7 @@ matrix:
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pyenv install $PYTHON_VERSION && pyenv global $PYTHON_VERSION; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv install $PYTHON_VERSION && pyenv global $PYTHON_VERSION; fi
-  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install python --version %PYTHON_VERSION%; fi
+  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install python --version $PYTHON_VERSION; fi
 
 install:
     - python --version
