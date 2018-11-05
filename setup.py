@@ -6,6 +6,11 @@ class get_pybind_include(object):
         import pybind11
         return pybind11.get_include()
 
+class get_pybind_user_include(object):
+    def __str__(self):
+        import pybind11
+        return pybind11.get_include(True)
+
 if sys.platform == 'win32':
   compile_args = [
     '/bigobj',
@@ -27,7 +32,7 @@ module = setuptools.Extension("deargui", [
     'imgui/imgui_widgets.cpp',
     'deargui/deargui.cpp',
   ],
-  include_dirs = [get_pybind_include(), 'imgui'],
+  include_dirs = [get_pybind_include(), get_pybind_user_include(), 'imgui'],
   extra_compile_args = compile_args,
   language = 'c++',
 )
