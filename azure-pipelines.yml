@@ -15,6 +15,9 @@ jobs:
     maxParallel: 4
 
   steps:
+  - checkout: self
+    submodules: true
+
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '$(python.version)'
