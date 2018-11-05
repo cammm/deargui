@@ -3,13 +3,13 @@ matrix:
     include:
         - os: osx
           language: shell
-          env: PYTHON_VERSION=3.7.1
+          env: PYTHON_VERSION=3.7.0
         - os: linux
           language: shell
-          env: PYTHON_VERSION=3.7.1
+          env: PYTHON_VERSION=3.7.0
         - os: windows
           language: shell
-          env: PYTHON_VERSION=3.7.1
+          env: PYTHON_VERSION=3.7.0
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pyenv install $PYTHON_VERSION && pyenv global $PYTHON_VERSION; fi
