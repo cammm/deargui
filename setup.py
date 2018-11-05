@@ -15,9 +15,7 @@ if sys.platform == 'win32':
 else:
   compile_args = [
     '-std=c++14',
-    '-Wno-error=null-conversion',
-    '-Wno-error=format-security',
-    '-Wno-error=int-to-void-pointer-cast',
+    '-Wno-error',
     '-DImTextureID=int',
     '-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1',
   ]
