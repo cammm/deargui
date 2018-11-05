@@ -43,5 +43,5 @@ setuptools.setup(
   author           = 'cammm',
   packages         = setuptools.find_packages(),
   ext_modules      = [module],
-  install_requires = ['pybind11'],
+  setup_requires   = ['pybind11'],
 )
