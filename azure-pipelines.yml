@@ -53,6 +53,8 @@ jobs:
     displayName: 'Install pipenv'
   - script: pip install pybind11
     displayName: 'Install pybind11'
+  - script: pip install pyfindvs
+    displayName: 'Install pyfindvs'
   - script: python setup.py build
     displayName: 'Build package'
 
