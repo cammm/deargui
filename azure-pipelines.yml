@@ -1,5 +1,5 @@
 jobs:
-- job: 'Build'
+- job: 'Build Linux'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -13,21 +13,74 @@ jobs:
       Python37:
         python.version: '3.7'
     maxParallel: 4
-
   steps:
   - checkout: self
     submodules: true
-
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
-
   - script: python -m pip install --upgrade pip
     displayName: 'Install pipenv'
-
   - script: pip install pybind11
     displayName: 'Install pybind11'
+  - script: python setup.py build
+    displayName: 'Build package'
 
+
+- job: 'Build Windows'
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python27:
+        python.version: '2.7'
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+    maxParallel: 4
+  steps:
+  - checkout: self
+    submodules: true
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x86'
+  - script: python -m pip install --upgrade pip
+    displayName: 'Install pipenv'
+  - script: pip install pybind11
+    displayName: 'Install pybind11'
+  - script: python setup.py build
+    displayName: 'Build package'
+
+
+- job: 'Build Mac'
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python27:
+        python.version: '2.7'
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+    maxParallel: 4
+  steps:
+  - checkout: self
+    submodules: true
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
+  - script: python -m pip install --upgrade pip
+    displayName: 'Install pipenv'
+  - script: pip install pybind11
+    displayName: 'Install pybind11'
   - script: python setup.py build
     displayName: 'Build package'
