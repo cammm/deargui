@@ -121,17 +121,23 @@ FOOTER = """
     });
     deargui.def("input_text", [](const char* label, char* data, size_t max_size, ImGuiInputTextFlags flags)
     {
-        char text[max_size + 1];
-        strcpy(text, data);
+        max_size++;
+        char* text = (char*)malloc(max_size * sizeof(char));
+        strncpy(text, data, max_size);
         auto ret = ImGui::InputText(label, text, max_size, flags, nullptr, NULL);
-        return std::make_tuple(ret, std::string(text));
+        std::string output(text);
+        free(text);
+        return std::make_tuple(ret, output);
     });
     deargui.def("input_text_multiline", [](const char* label, char* data, size_t max_size, const ImVec2& size, ImGuiInputTextFlags flags)
     {
-        char text[max_size + 1];
-        strcpy(text, data);
+        max_size++;
+        char* text = (char*)malloc(max_size * sizeof(char));
+        strncpy(text, data, max_size);
         auto ret = ImGui::InputTextMultiline(label, text, max_size, size, flags, nullptr, NULL);
-        return std::make_tuple(ret, std::string(text));
+        std::string output(text);
+        free(text);
+        return std::make_tuple(ret, output);
     });
     deargui.def("combo", [](const char* label, int * current_item, std::vector<std::string> items, int popup_max_height_in_items)
     {
