@@ -23,7 +23,7 @@ jobs:
   - script: python -m pip install --upgrade pip
     displayName: 'Install pipenv'
   - script: pip install pybind11
-    displayName: 'Install pybind11'
+    displayName: 'Install dependencies'
   - script: python setup.py build
     displayName: 'Build package'
 
@@ -51,10 +51,8 @@ jobs:
       architecture: 'x86'
   - script: python -m pip install --upgrade pip
     displayName: 'Install pipenv'
-  - script: pip install pybind11
-    displayName: 'Install pybind11'
-  - script: pip install pyfindvs
-    displayName: 'Install pyfindvs'
+  - script: pip install pybind11 pathlib pyfindvs
+    displayName: 'Install dependencies'
   - script: python setup.py build
     displayName: 'Build package'
 
@@ -83,6 +81,6 @@ jobs:
   - script: python -m pip install --upgrade pip
     displayName: 'Install pipenv'
   - script: pip install pybind11
-    displayName: 'Install pybind11'
+    displayName: 'Install dependencies'
   - script: python setup.py build
     displayName: 'Build package'
