@@ -18,12 +18,19 @@ jobs:
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
+  - task: TwineAuthenticate@0
+    inputs:
+      externalFeeds: 'testpypi'
   - script: python -m pip install --upgrade pip
     displayName: 'Install pipenv'
-  - script: pip install pybind11
+  - script: pip install pybind11 twine wheel
     displayName: 'Install dependencies'
-  - script: python setup.py build
-    displayName: 'Build package'
+  - script: python setup.py sdist
+    displayName: 'Build source'
+  - script: python setup.py bdist_wheel --universal
+    displayName: 'Build wheel'
+  - script: twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+    displayName: 'Upload to pypi'
 
 
 - job: 'Build_Windows'
@@ -45,12 +52,19 @@ jobs:
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x86'
+  - task: TwineAuthenticate@0
+    inputs:
+      externalFeeds: 'testpypi'
   - script: python -m pip install --upgrade pip
     displayName: 'Install pipenv'
-  - script: pip install pybind11 pyfindvs
+  - script: pip install pybind11 twine wheel pyfindvs
     displayName: 'Install dependencies'
-  - script: python setup.py build
-    displayName: 'Build package'
+  - script: python setup.py sdist
+    displayName: 'Build source'
+  - script: python setup.py bdist_wheel --universal
+    displayName: 'Build wheel'
+  - script: twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+    displayName: 'Upload to pypi'
 
 
 - job: 'Build_Mac'
@@ -72,9 +86,16 @@ jobs:
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
+  - task: TwineAuthenticate@0
+    inputs:
+      externalFeeds: 'testpypi'
   - script: python -m pip install --upgrade pip
     displayName: 'Install pipenv'
-  - script: pip install pybind11
+  - script: pip install pybind11 twine wheel
     displayName: 'Install dependencies'
-  - script: python setup.py build
-    displayName: 'Build package'
+  - script: python setup.py sdist
+    displayName: 'Build source'
+  - script: python setup.py bdist_wheel --universal
+    displayName: 'Build wheel'
+  - script: twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+    displayName: 'Upload to pypi'
