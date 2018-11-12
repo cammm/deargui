@@ -1,5 +1,5 @@
 jobs:
-- job: 'Build Linux'
+- job: 'Build_Linux'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -28,7 +28,7 @@ jobs:
     displayName: 'Build package'
 
 
-- job: 'Build Windows'
+- job: 'Build_Windows'
   pool:
     vmImage: 'vs2017-win2016'
   strategy:
@@ -57,7 +57,7 @@ jobs:
     displayName: 'Build package'
 
 
-- job: 'Build Mac'
+- job: 'Build_Mac'
   pool:
     vmImage: 'vs2017-win2016'
   strategy:
