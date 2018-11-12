@@ -18,9 +18,6 @@ jobs:
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
-  - task: TwineAuthenticate@0
-    inputs:
-      externalFeeds: 'testpypi'
   - script: python -m pip install --upgrade pip
     displayName: 'Install pipenv'
   - script: pip install pybind11 twine wheel
@@ -29,7 +26,7 @@ jobs:
     displayName: 'Build source'
   - script: python setup.py bdist_wheel --universal
     displayName: 'Build wheel'
-  - script: twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+  - script: twine upload --repository deargui --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'Upload to pypi'
 
 
@@ -52,9 +49,6 @@ jobs:
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x86'
-  - task: TwineAuthenticate@0
-    inputs:
-      externalFeeds: 'testpypi'
   - script: python -m pip install --upgrade pip
     displayName: 'Install pipenv'
   - script: pip install pybind11 twine wheel pyfindvs
@@ -63,7 +57,7 @@ jobs:
     displayName: 'Build source'
   - script: python setup.py bdist_wheel --universal
     displayName: 'Build wheel'
-  - script: twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+  - script: twine upload --repository deargui --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'Upload to pypi'
 
 
@@ -86,9 +80,6 @@ jobs:
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
-  - task: TwineAuthenticate@0
-    inputs:
-      externalFeeds: 'testpypi'
   - script: python -m pip install --upgrade pip
     displayName: 'Install pipenv'
   - script: pip install pybind11 twine wheel
@@ -97,5 +88,5 @@ jobs:
     displayName: 'Build source'
   - script: python setup.py bdist_wheel --universal
     displayName: 'Build wheel'
-  - script: twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+  - script: twine upload --repository deargui --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'Upload to pypi'
