@@ -1471,7 +1471,7 @@ PYBIND11_MODULE(deargui, deargui)
     }
     , py::arg("out_ini_size") = 0
     , py::return_value_policy::automatic_reference);
-    py::enum_<ImGuiWindowFlags_>(deargui, "WindowFlags")
+    py::enum_<ImGuiWindowFlags_>(deargui, "WindowFlags", py::arithmetic())
         .value("WINDOW_FLAGS_NONE", ImGuiWindowFlags_None)
         .value("WINDOW_FLAGS_NO_TITLE_BAR", ImGuiWindowFlags_NoTitleBar)
         .value("WINDOW_FLAGS_NO_RESIZE", ImGuiWindowFlags_NoResize)
@@ -1500,7 +1500,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("WINDOW_FLAGS_CHILD_MENU", ImGuiWindowFlags_ChildMenu)
         .export_values();
 
-    py::enum_<ImGuiInputTextFlags_>(deargui, "InputTextFlags")
+    py::enum_<ImGuiInputTextFlags_>(deargui, "InputTextFlags", py::arithmetic())
         .value("INPUT_TEXT_FLAGS_NONE", ImGuiInputTextFlags_None)
         .value("INPUT_TEXT_FLAGS_CHARS_DECIMAL", ImGuiInputTextFlags_CharsDecimal)
         .value("INPUT_TEXT_FLAGS_CHARS_HEXADECIMAL", ImGuiInputTextFlags_CharsHexadecimal)
@@ -1524,7 +1524,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("INPUT_TEXT_FLAGS_MULTILINE", ImGuiInputTextFlags_Multiline)
         .export_values();
 
-    py::enum_<ImGuiTreeNodeFlags_>(deargui, "TreeNodeFlags")
+    py::enum_<ImGuiTreeNodeFlags_>(deargui, "TreeNodeFlags", py::arithmetic())
         .value("TREE_NODE_FLAGS_NONE", ImGuiTreeNodeFlags_None)
         .value("TREE_NODE_FLAGS_SELECTED", ImGuiTreeNodeFlags_Selected)
         .value("TREE_NODE_FLAGS_FRAMED", ImGuiTreeNodeFlags_Framed)
@@ -1541,7 +1541,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("TREE_NODE_FLAGS_COLLAPSING_HEADER", ImGuiTreeNodeFlags_CollapsingHeader)
         .export_values();
 
-    py::enum_<ImGuiSelectableFlags_>(deargui, "SelectableFlags")
+    py::enum_<ImGuiSelectableFlags_>(deargui, "SelectableFlags", py::arithmetic())
         .value("SELECTABLE_FLAGS_NONE", ImGuiSelectableFlags_None)
         .value("SELECTABLE_FLAGS_DONT_CLOSE_POPUPS", ImGuiSelectableFlags_DontClosePopups)
         .value("SELECTABLE_FLAGS_SPAN_ALL_COLUMNS", ImGuiSelectableFlags_SpanAllColumns)
@@ -1549,7 +1549,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("SELECTABLE_FLAGS_DISABLED", ImGuiSelectableFlags_Disabled)
         .export_values();
 
-    py::enum_<ImGuiComboFlags_>(deargui, "ComboFlags")
+    py::enum_<ImGuiComboFlags_>(deargui, "ComboFlags", py::arithmetic())
         .value("COMBO_FLAGS_NONE", ImGuiComboFlags_None)
         .value("COMBO_FLAGS_POPUP_ALIGN_LEFT", ImGuiComboFlags_PopupAlignLeft)
         .value("COMBO_FLAGS_HEIGHT_SMALL", ImGuiComboFlags_HeightSmall)
@@ -1561,7 +1561,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("COMBO_FLAGS_HEIGHT_MASK", ImGuiComboFlags_HeightMask_)
         .export_values();
 
-    py::enum_<ImGuiFocusedFlags_>(deargui, "FocusedFlags")
+    py::enum_<ImGuiFocusedFlags_>(deargui, "FocusedFlags", py::arithmetic())
         .value("FOCUSED_FLAGS_NONE", ImGuiFocusedFlags_None)
         .value("FOCUSED_FLAGS_CHILD_WINDOWS", ImGuiFocusedFlags_ChildWindows)
         .value("FOCUSED_FLAGS_ROOT_WINDOW", ImGuiFocusedFlags_RootWindow)
@@ -1569,7 +1569,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("FOCUSED_FLAGS_ROOT_AND_CHILD_WINDOWS", ImGuiFocusedFlags_RootAndChildWindows)
         .export_values();
 
-    py::enum_<ImGuiHoveredFlags_>(deargui, "HoveredFlags")
+    py::enum_<ImGuiHoveredFlags_>(deargui, "HoveredFlags", py::arithmetic())
         .value("HOVERED_FLAGS_NONE", ImGuiHoveredFlags_None)
         .value("HOVERED_FLAGS_CHILD_WINDOWS", ImGuiHoveredFlags_ChildWindows)
         .value("HOVERED_FLAGS_ROOT_WINDOW", ImGuiHoveredFlags_RootWindow)
@@ -1582,7 +1582,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("HOVERED_FLAGS_ROOT_AND_CHILD_WINDOWS", ImGuiHoveredFlags_RootAndChildWindows)
         .export_values();
 
-    py::enum_<ImGuiDragDropFlags_>(deargui, "DragDropFlags")
+    py::enum_<ImGuiDragDropFlags_>(deargui, "DragDropFlags", py::arithmetic())
         .value("DRAG_DROP_FLAGS_NONE", ImGuiDragDropFlags_None)
         .value("DRAG_DROP_FLAGS_SOURCE_NO_PREVIEW_TOOLTIP", ImGuiDragDropFlags_SourceNoPreviewTooltip)
         .value("DRAG_DROP_FLAGS_SOURCE_NO_DISABLE_HOVER", ImGuiDragDropFlags_SourceNoDisableHover)
@@ -1596,7 +1596,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("DRAG_DROP_FLAGS_ACCEPT_PEEK_ONLY", ImGuiDragDropFlags_AcceptPeekOnly)
         .export_values();
 
-    py::enum_<ImGuiDataType_>(deargui, "DataType")
+    py::enum_<ImGuiDataType_>(deargui, "DataType", py::arithmetic())
         .value("DATA_TYPE_S32", ImGuiDataType_S32)
         .value("DATA_TYPE_U32", ImGuiDataType_U32)
         .value("DATA_TYPE_S64", ImGuiDataType_S64)
@@ -1606,7 +1606,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("DATA_TYPE_COUNT", ImGuiDataType_COUNT)
         .export_values();
 
-    py::enum_<ImGuiDir_>(deargui, "Dir")
+    py::enum_<ImGuiDir_>(deargui, "Dir", py::arithmetic())
         .value("DIR_NONE", ImGuiDir_None)
         .value("DIR_LEFT", ImGuiDir_Left)
         .value("DIR_RIGHT", ImGuiDir_Right)
@@ -1615,7 +1615,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("DIR_COUNT", ImGuiDir_COUNT)
         .export_values();
 
-    py::enum_<ImGuiKey_>(deargui, "Key")
+    py::enum_<ImGuiKey_>(deargui, "Key", py::arithmetic())
         .value("KEY_TAB", ImGuiKey_Tab)
         .value("KEY_LEFT_ARROW", ImGuiKey_LeftArrow)
         .value("KEY_RIGHT_ARROW", ImGuiKey_RightArrow)
@@ -1640,7 +1640,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("KEY_COUNT", ImGuiKey_COUNT)
         .export_values();
 
-    py::enum_<ImGuiNavInput_>(deargui, "NavInput")
+    py::enum_<ImGuiNavInput_>(deargui, "NavInput", py::arithmetic())
         .value("NAV_INPUT_ACTIVATE", ImGuiNavInput_Activate)
         .value("NAV_INPUT_CANCEL", ImGuiNavInput_Cancel)
         .value("NAV_INPUT_INPUT", ImGuiNavInput_Input)
@@ -1666,7 +1666,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("NAV_INPUT_INTERNAL_START", ImGuiNavInput_InternalStart_)
         .export_values();
 
-    py::enum_<ImGuiConfigFlags_>(deargui, "ConfigFlags")
+    py::enum_<ImGuiConfigFlags_>(deargui, "ConfigFlags", py::arithmetic())
         .value("CONFIG_FLAGS_NAV_ENABLE_KEYBOARD", ImGuiConfigFlags_NavEnableKeyboard)
         .value("CONFIG_FLAGS_NAV_ENABLE_GAMEPAD", ImGuiConfigFlags_NavEnableGamepad)
         .value("CONFIG_FLAGS_NAV_ENABLE_SET_MOUSE_POS", ImGuiConfigFlags_NavEnableSetMousePos)
@@ -1677,13 +1677,13 @@ PYBIND11_MODULE(deargui, deargui)
         .value("CONFIG_FLAGS_IS_TOUCH_SCREEN", ImGuiConfigFlags_IsTouchScreen)
         .export_values();
 
-    py::enum_<ImGuiBackendFlags_>(deargui, "BackendFlags")
+    py::enum_<ImGuiBackendFlags_>(deargui, "BackendFlags", py::arithmetic())
         .value("BACKEND_FLAGS_HAS_GAMEPAD", ImGuiBackendFlags_HasGamepad)
         .value("BACKEND_FLAGS_HAS_MOUSE_CURSORS", ImGuiBackendFlags_HasMouseCursors)
         .value("BACKEND_FLAGS_HAS_SET_MOUSE_POS", ImGuiBackendFlags_HasSetMousePos)
         .export_values();
 
-    py::enum_<ImGuiCol_>(deargui, "Col")
+    py::enum_<ImGuiCol_>(deargui, "Col", py::arithmetic())
         .value("COL_TEXT", ImGuiCol_Text)
         .value("COL_TEXT_DISABLED", ImGuiCol_TextDisabled)
         .value("COL_WINDOW_BG", ImGuiCol_WindowBg)
@@ -1730,7 +1730,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("COL_COUNT", ImGuiCol_COUNT)
         .export_values();
 
-    py::enum_<ImGuiStyleVar_>(deargui, "StyleVar")
+    py::enum_<ImGuiStyleVar_>(deargui, "StyleVar", py::arithmetic())
         .value("STYLE_VAR_ALPHA", ImGuiStyleVar_Alpha)
         .value("STYLE_VAR_WINDOW_PADDING", ImGuiStyleVar_WindowPadding)
         .value("STYLE_VAR_WINDOW_ROUNDING", ImGuiStyleVar_WindowRounding)
@@ -1755,7 +1755,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("STYLE_VAR_COUNT", ImGuiStyleVar_COUNT)
         .export_values();
 
-    py::enum_<ImGuiColorEditFlags_>(deargui, "ColorEditFlags")
+    py::enum_<ImGuiColorEditFlags_>(deargui, "ColorEditFlags", py::arithmetic())
         .value("COLOR_EDIT_FLAGS_NONE", ImGuiColorEditFlags_None)
         .value("COLOR_EDIT_FLAGS_NO_ALPHA", ImGuiColorEditFlags_NoAlpha)
         .value("COLOR_EDIT_FLAGS_NO_PICKER", ImGuiColorEditFlags_NoPicker)
@@ -1783,7 +1783,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("COLOR_EDIT_FLAGS__OPTIONS_DEFAULT", ImGuiColorEditFlags__OptionsDefault)
         .export_values();
 
-    py::enum_<ImGuiMouseCursor_>(deargui, "MouseCursor")
+    py::enum_<ImGuiMouseCursor_>(deargui, "MouseCursor", py::arithmetic())
         .value("MOUSE_CURSOR_NONE", ImGuiMouseCursor_None)
         .value("MOUSE_CURSOR_ARROW", ImGuiMouseCursor_Arrow)
         .value("MOUSE_CURSOR_TEXT_INPUT", ImGuiMouseCursor_TextInput)
@@ -1796,7 +1796,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("MOUSE_CURSOR_COUNT", ImGuiMouseCursor_COUNT)
         .export_values();
 
-    py::enum_<ImGuiCond_>(deargui, "Cond")
+    py::enum_<ImGuiCond_>(deargui, "Cond", py::arithmetic())
         .value("COND_ALWAYS", ImGuiCond_Always)
         .value("COND_ONCE", ImGuiCond_Once)
         .value("COND_FIRST_USE_EVER", ImGuiCond_FirstUseEver)
@@ -2098,7 +2098,7 @@ PYBIND11_MODULE(deargui, deargui)
     py::class_<ImDrawChannel> DrawChannel(deargui, "DrawChannel");
     DrawChannel.def_readwrite("cmd_buffer", &ImDrawChannel::CmdBuffer);
     DrawChannel.def_readwrite("idx_buffer", &ImDrawChannel::IdxBuffer);
-    py::enum_<ImDrawCornerFlags_>(deargui, "DrawCornerFlags")
+    py::enum_<ImDrawCornerFlags_>(deargui, "DrawCornerFlags", py::arithmetic())
         .value("DRAW_CORNER_FLAGS_TOP_LEFT", ImDrawCornerFlags_TopLeft)
         .value("DRAW_CORNER_FLAGS_TOP_RIGHT", ImDrawCornerFlags_TopRight)
         .value("DRAW_CORNER_FLAGS_BOT_LEFT", ImDrawCornerFlags_BotLeft)
@@ -2110,7 +2110,7 @@ PYBIND11_MODULE(deargui, deargui)
         .value("DRAW_CORNER_FLAGS_ALL", ImDrawCornerFlags_All)
         .export_values();
 
-    py::enum_<ImDrawListFlags_>(deargui, "DrawListFlags")
+    py::enum_<ImDrawListFlags_>(deargui, "DrawListFlags", py::arithmetic())
         .value("DRAW_LIST_FLAGS_ANTI_ALIASED_LINES", ImDrawListFlags_AntiAliasedLines)
         .value("DRAW_LIST_FLAGS_ANTI_ALIASED_FILL", ImDrawListFlags_AntiAliasedFill)
         .export_values();
@@ -2425,7 +2425,7 @@ PYBIND11_MODULE(deargui, deargui)
     FontGlyph.def_readwrite("v0", &ImFontGlyph::V0);
     FontGlyph.def_readwrite("u1", &ImFontGlyph::U1);
     FontGlyph.def_readwrite("v1", &ImFontGlyph::V1);
-    py::enum_<ImFontAtlasFlags_>(deargui, "FontAtlasFlags")
+    py::enum_<ImFontAtlasFlags_>(deargui, "FontAtlasFlags", py::arithmetic())
         .value("FONT_ATLAS_FLAGS_NONE", ImFontAtlasFlags_None)
         .value("FONT_ATLAS_FLAGS_NO_POWER_OF_TWO_HEIGHT", ImFontAtlasFlags_NoPowerOfTwoHeight)
         .value("FONT_ATLAS_FLAGS_NO_MOUSE_CURSORS", ImFontAtlasFlags_NoMouseCursors)

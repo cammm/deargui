@@ -393,7 +393,7 @@ def write_pyargs(arguments):
         out(', py::arg("{}"){}'.format(format_attribute(argument.spelling), default))
 
 def parse_enum(cursor):
-    out('py::enum_<{cname}>(deargui, "{pyname}")'.format(
+    out('py::enum_<{cname}>(deargui, "{pyname}", py::arithmetic())'.format(
         cname=name(cursor),
         pyname=format_type(cursor.spelling)
     ))
