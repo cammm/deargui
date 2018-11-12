@@ -28,6 +28,9 @@ jobs:
     displayName: 'Build wheel'
   - script: twine upload --repository deargui --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'Upload to pypi'
+    env:
+      TWINE_USERNAME: $(twine.username)
+      TWINE_PASSWORD: $(twine.password)
 
 
 - job: 'Build_Windows'
@@ -59,6 +62,9 @@ jobs:
     displayName: 'Build wheel'
   - script: twine upload --repository deargui --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'Upload to pypi'
+    env:
+      TWINE_USERNAME: $(twine.username)
+      TWINE_PASSWORD: $(twine.password)
 
 
 - job: 'Build_Mac'
@@ -90,3 +96,6 @@ jobs:
     displayName: 'Build wheel'
   - script: twine upload --repository deargui --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'Upload to pypi'
+    env:
+      TWINE_USERNAME: $(twine.username)
+      TWINE_PASSWORD: $(twine.password)
