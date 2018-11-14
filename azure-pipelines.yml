@@ -25,12 +25,7 @@ jobs:
   - script: python setup.py sdist
     displayName: 'Build source'
   - script: python setup.py bdist_wheel --universal
-    displayName: 'Build wheel'
-  - script: twine upload --skip-existing --repository deargui --repository-url https://test.pypi.org/legacy/ dist/*
-    displayName: 'Upload to pypi'
-    env:
-      TWINE_USERNAME: $(twine.username)
-      TWINE_PASSWORD: $(twine.password)
+    displayName: 'Build binaries'
 
 
 - job: 'Build_Windows'
@@ -59,7 +54,7 @@ jobs:
   - script: python setup.py sdist
     displayName: 'Build source'
   - script: python setup.py bdist_wheel --universal
-    displayName: 'Build wheel'
+    displayName: 'Build binaries'
   - script: twine upload --skip-existing --repository deargui --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'Upload to pypi'
     env:
@@ -93,7 +88,7 @@ jobs:
   - script: python setup.py sdist
     displayName: 'Build source'
   - script: python setup.py bdist_wheel --universal
-    displayName: 'Build wheel'
+    displayName: 'Build binaries'
   - script: twine upload --skip-existing --repository deargui --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'Upload to pypi'
     env:
