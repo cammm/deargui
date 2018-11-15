@@ -55,7 +55,7 @@ jobs:
     displayName: 'Build source'
   - script: python setup.py bdist_wheel --universal
     displayName: 'Build binaries'
-  - script: twine upload --skip-existing --repository deargui dist/*
+  - script: twine upload --skip-existing --repository deargui --repository-url https://upload.pypi.org/legacy/ dist/*
     displayName: 'Upload to pypi'
     env:
       TWINE_USERNAME: $(twine.username)
@@ -89,7 +89,7 @@ jobs:
     displayName: 'Build source'
   - script: python setup.py bdist_wheel --universal
     displayName: 'Build binaries'
-  - script: twine upload --skip-existing --repository deargui dist/*
+  - script: twine upload --skip-existing --repository deargui --repository-url https://upload.pypi.org/legacy/ dist/*
     displayName: 'Upload to pypi'
     env:
       TWINE_USERNAME: $(twine.username)
