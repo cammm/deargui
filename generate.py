@@ -54,6 +54,12 @@ PYBIND11_MODULE(deargui, deargui)
 """
 
 FOOTER = """
+    Style.def("set_color", [](ImGuiStyle& self, int item, ImVec4 color)
+    {
+        if (item < 0) throw py::index_error();
+        if (item >= IM_ARRAYSIZE(self.Colors)) throw py::index_error();
+        self.Colors[item] = color;
+    }, py::arg("item"), py::arg("color"));
     IO.def("set_mouse_down", [](ImGuiIO& self, int button, bool down)
     {
         if (button < 0) throw py::index_error();
@@ -109,7 +115,6 @@ FOOTER = """
         std::string data((char*)pixels, width * height * bytes_per_pixel);
         return std::make_tuple(width, height, py::bytes(data));
     });
-
     deargui.def("init", []()
     {
         ImGui::CreateContext();
@@ -128,7 +133,12 @@ FOOTER = """
         std::string output(text);
         free(text);
         return std::make_tuple(ret, output);
-    });
+    }
+    , py::arg("label")
+    , py::arg("data")
+    , py::arg("max_size")
+    , py::arg("flags") = 0
+    , py::return_value_policy::automatic_reference);
     deargui.def("input_text_multiline", [](const char* label, char* data, size_t max_size, const ImVec2& size, ImGuiInputTextFlags flags)
     {
         max_size++;
@@ -138,7 +148,13 @@ FOOTER = """
         std::string output(text);
         free(text);
         return std::make_tuple(ret, output);
-    });
+    }
+    , py::arg("label")
+    , py::arg("data")
+    , py::arg("max_size")
+    , py::arg("size") = ImVec2(0,0)
+    , py::arg("flags") = 0
+    , py::return_value_policy::automatic_reference);
     deargui.def("combo", [](const char* label, int * current_item, std::vector<std::string> items, int popup_max_height_in_items)
     {
         std::vector<const char*> ptrs;

@@ -23,6 +23,7 @@ else:
   compile_args = [
     '-std=c++14',
     '-Wno-error',
+    '-Wno-null-conversion',
     '-DImTextureID=int',
     '-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1',
   ]
@@ -42,7 +43,7 @@ module = setuptools.Extension("deargui", [
 setuptools.setup(
   name             = 'deargui',
   description      = 'Python bindings for Dear ImGui',
-  version          = '0.1.4',
+  version          = '0.1.5',
   url              = 'http://github.com/cammm/deargui',
   license          = 'MIT',
   author           = 'cammm',
