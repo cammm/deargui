@@ -252,6 +252,7 @@ EXCLUDES = set(
     'ImGui::SetAllocatorFunctions',
     'ImGui::MemAlloc',
     'ImGui::MemFree',
+    'ImGui::GetAllocatorFunctions',
     'ImGuiIO::GetClipboardTextFn',
     'ImGuiIO::SetClipboardTextFn',
     'ImGuiIO::ImeSetInputScreenPosFn',
@@ -264,6 +265,13 @@ EXCLUDES = set(
 
 OVERLOADED = set([
     'ImGui::IsPopupOpen',
+    'ImGui::SetScrollX',
+    'ImGui::SetScrollY',
+    'ImGui::SetScrollFromPosY',
+    'ImGui::SetScrollFromPosX',
+    'ImGui::GetBackgroundDrawList',
+    'ImGui::GetForegroundDrawList',
+    'ImGui::TableGetColumnName',
 ])
 
 DEFAULTS = {
