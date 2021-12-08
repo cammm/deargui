@@ -33,6 +33,7 @@ module = setuptools.Extension("deargui", [
     'imgui/imgui_demo.cpp',
     'imgui/imgui_draw.cpp',
     'imgui/imgui_widgets.cpp',
+    'imgui/imgui_tables.cpp',
     'deargui/deargui.cpp',
   ],
   include_dirs = [get_pybind_include(), get_pybind_user_include(), 'imgui'],
